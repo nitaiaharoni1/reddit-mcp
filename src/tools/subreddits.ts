@@ -11,7 +11,7 @@ import { formatErrorResult, formatTextResult } from '../utils/result-formatter';
  */
 const getSubredditPosts = async (args: {
   subreddit: string;
-  sort?: 'hot' | 'new' | 'top' | 'rising';
+  sort?: 'hot' | 'new' | 'top' | 'rising' | 'controversial';
   limit?: number;
   after?: string;
   time?: 'hour' | 'day' | 'week' | 'month' | 'year' | 'all';
@@ -111,7 +111,7 @@ export const subredditTools: MCPToolDefinition[] = [
   {
     name: 'get_subreddit_posts',
     description:
-      'Get posts from a subreddit. Supports sorting by hot, new, top, or rising. Can paginate using the "after" parameter from previous responses.',
+      'Retrieve posts from a specific subreddit with flexible sorting options. Supports hot (trending), new (recent), top (highest scored), rising (gaining traction), and controversial (divisive) sorting. Includes pagination support for browsing through multiple pages of results. Perfect for exploring subreddit content or monitoring specific communities.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -121,8 +121,8 @@ export const subredditTools: MCPToolDefinition[] = [
         },
         sort: {
           type: 'string',
-          enum: ['hot', 'new', 'top', 'rising'],
-          description: 'Sort order for posts (default: hot)',
+          enum: ['hot', 'new', 'top', 'rising', 'controversial'],
+          description: 'Sort order for posts: hot (trending), new (recent), top (highest scored), rising (gaining traction), controversial (divisive). Default: hot',
           default: 'hot',
         },
         limit: {
@@ -132,12 +132,12 @@ export const subredditTools: MCPToolDefinition[] = [
         },
         after: {
           type: 'string',
-          description: 'Pagination token from previous response to get next page',
+          description: 'Pagination token from previous response to get next page of results',
         },
         time: {
           type: 'string',
           enum: ['hour', 'day', 'week', 'month', 'year', 'all'],
-          description: 'Time period for top/controversial sorting (required for top sort)',
+          description: 'Time period filter for top or controversial sorting (required for top/controversial sort)',
         },
       },
       required: ['subreddit'],
@@ -146,7 +146,7 @@ export const subredditTools: MCPToolDefinition[] = [
   },
   {
     name: 'get_subreddit_info',
-    description: 'Get information about a subreddit including description, subscriber count, and metadata.',
+    description: 'Fetch comprehensive information about a subreddit including its description, subscriber count, creation date, content policies, and community metadata. Useful for understanding a subreddit\'s purpose, size, and characteristics before exploring its content.',
     inputSchema: {
       type: 'object',
       properties: {

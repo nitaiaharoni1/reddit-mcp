@@ -1,7 +1,7 @@
 # Reddit MCP Server
 
-[![GitHub stars](https://img.shields.io/github/stars/nitaiaharoni1/reddit-mcp?style=social)](https://github.com/nitaiaharoni1/reddit-mcp/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/nitaiaharoni1/reddit-mcp?style=social)](https://github.com/nitaiaharoni1/reddit-mcp/network/members)
+[![GitHub stars](https://img.shields.io/github/stars/nitaiaharoni1/mcp-reddit?style=social)](https://github.com/nitaiaharoni1/mcp-reddit/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/nitaiaharoni1/mcp-reddit?style=social)](https://github.com/nitaiaharoni1/mcp-reddit/network/members)
 
 A Model Context Protocol (MCP) server that provides AI assistants with direct access to Reddit's API. This server enables natural language interactions with Reddit data including subreddits, posts, comments, users, and search functionality.
 
@@ -10,19 +10,19 @@ A Model Context Protocol (MCP) server that provides AI assistants with direct ac
 ### NPX (Recommended - No Installation Required)
 ```bash
 # Run directly with npx (no installation needed)
-npx reddit-mcp
+npx mcp-reddit
 ```
 
 ### Global Installation
 ```bash
 # Install globally for repeated use
-npm install -g reddit-mcp
-reddit-mcp
+npm install -g mcp-reddit
+mcp-reddit
 ```
 
 Restart Claude Desktop after setup.
 
-**✨ New:** Use with NPX - no installation required! Just run `npx reddit-mcp` directly.
+**✨ New:** Use with NPX - no installation required! Just run `npx mcp-reddit` directly.
 
 ## ✨ Features
 
@@ -68,7 +68,7 @@ Restart Claude Desktop after setup.
    ```bash
    export REDDIT_CLIENT_ID="your_client_id"
    export REDDIT_CLIENT_SECRET="your_client_secret"
-   export REDDIT_USER_AGENT="reddit-mcp:1.0.0 (by /u/yourusername)"
+   export REDDIT_USER_AGENT="mcp-reddit:1.0.0 (by /u/yourusername)"
    ```
 
    Optional (for user-specific features):
@@ -82,13 +82,13 @@ Restart Claude Desktop after setup.
    ```json
    {
      "mcpServers": {
-       "reddit-mcp": {
+       "mcp-reddit": {
          "command": "npx",
-         "args": ["reddit-mcp"],
+         "args": ["mcp-reddit"],
          "env": {
            "REDDIT_CLIENT_ID": "your_client_id",
            "REDDIT_CLIENT_SECRET": "your_client_secret",
-           "REDDIT_USER_AGENT": "reddit-mcp:1.0.0 (by /u/yourusername)"
+           "REDDIT_USER_AGENT": "mcp-reddit:1.0.0 (by /u/yourusername)"
          }
        }
      }
@@ -171,7 +171,7 @@ Reddit requires a specific User-Agent format:
 
 Example:
 ```
-reddit-mcp:1.0.0 (by /u/yourusername)
+mcp-reddit:1.0.0 (by /u/yourusername)
 ```
 
 ## 📋 Rate Limits
@@ -205,13 +205,13 @@ You can test the Reddit API client directly using the test scripts (not committe
 # Test Reddit API Client
 REDDIT_CLIENT_ID="your_client_id" \
 REDDIT_CLIENT_SECRET="your_client_secret" \
-REDDIT_USER_AGENT="reddit-mcp:1.0.0 (by /u/yourusername)" \
+REDDIT_USER_AGENT="mcp-reddit:1.0.0 (by /u/yourusername)" \
 npx ts-node test-reddit.ts
 
 # Test MCP Server Tools
 REDDIT_CLIENT_ID="your_client_id" \
 REDDIT_CLIENT_SECRET="your_client_secret" \
-REDDIT_USER_AGENT="reddit-mcp:1.0.0 (by /u/yourusername)" \
+REDDIT_USER_AGENT="mcp-reddit:1.0.0 (by /u/yourusername)" \
 npx ts-node test-mcp-server.ts
 ```
 
@@ -223,8 +223,8 @@ npx ts-node test-mcp-server.ts
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/nitaiaharoni1/reddit-mcp.git
-   cd reddit-mcp
+   git clone https://github.com/nitaiaharoni1/mcp-reddit.git
+   cd mcp-reddit
    ```
 
 2. **Install dependencies:**
@@ -284,7 +284,7 @@ npx ts-node test-mcp-server.ts
 
 3. **Verify Publication:**
    ```bash
-   npx reddit-mcp --version
+   npx mcp-reddit --version
    ```
 
 ### Benefits of NPX Approach
@@ -323,7 +323,7 @@ Always set credentials via environment variables:
 ```bash
 export REDDIT_CLIENT_ID="your_client_id"
 export REDDIT_CLIENT_SECRET="your_client_secret"
-export REDDIT_USER_AGENT="reddit-mcp:1.0.0 (by /u/yourusername)"
+export REDDIT_USER_AGENT="mcp-reddit:1.0.0 (by /u/yourusername)"
 ```
 
 ### Credential Rotation
@@ -340,7 +340,7 @@ If you've accidentally committed credentials:
 
 ## 🙋‍♂️ Support
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/nitaiaharoni1/reddit-mcp/issues)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/nitaiaharoni1/mcp-reddit/issues)
 - **Documentation**: This README and inline code documentation
 - **Community**: Contributions and discussions welcome!
 

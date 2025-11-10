@@ -289,7 +289,7 @@ export class RedditClient {
    */
   async getSubredditPosts(
     subreddit: string,
-    sort: 'hot' | 'new' | 'top' | 'rising' = 'hot',
+    sort: 'hot' | 'new' | 'top' | 'rising' | 'controversial' = 'hot',
     limit: number = 25,
     after?: string,
     time?: 'hour' | 'day' | 'week' | 'month' | 'year' | 'all'
@@ -297,8 +297,81 @@ export class RedditClient {
     const endpoint = `/r/${subreddit}/${sort}.json`;
     const params: Record<string, any> = { limit };
     if (after) params.after = after;
-    if (time && sort === 'top') params.t = time;
+    if (time && (sort === 'top' || sort === 'controversial')) params.t = time;
     return this.get<RedditListingResponse<RedditPost>>(endpoint, params);
+  }
+
+  /**
+   * Get front page posts (best, hot, new, top, rising, controversial)
+   */
+  async getFrontPagePosts(
+    sort: 'best' | 'hot' | 'new' | 'top' | 'rising' | 'controversial' = 'hot',
+    limit: number = 25,
+    after?: string,
+    time?: 'hour' | 'day' | 'week' | 'month' | 'year' | 'all'
+  ): Promise<RedditListingResponse<RedditPost>> {
+    const endpoint = `/${sort}.json`;
+    const params: Record<string, any> = { limit };
+    if (after) params.after = after;
+    if (time && (sort === 'top' || sort === 'controversial')) params.t = time;
+    return this.get<RedditListingResponse<RedditPost>>(endpoint, params);
+  }
+
+  /**
+   * Get popular subreddits
+   */
+  async getPopularSubreddits(
+    limit: number = 25,
+    after?: string
+  ): Promise<RedditListingResponse<RedditSubreddit>> {
+    const endpoint = '/subreddits/popular.json';
+    const params: Record<string, any> = { limit };
+    if (after) params.after = after;
+    return this.get<RedditListingResponse<RedditSubreddit>>(endpoint, params);
+  }
+
+  /**
+   * Get new subreddits
+   */
+  async getNewSubreddits(
+    limit: number = 25,
+    after?: string
+  ): Promise<RedditListingResponse<RedditSubreddit>> {
+    const endpoint = '/subreddits/new.json';
+    const params: Record<string, any> = { limit };
+    if (after) params.after = after;
+    return this.get<RedditListingResponse<RedditSubreddit>>(endpoint, params);
+  }
+
+  /**
+   * Search subreddits by name or description
+   */
+  async searchSubreddits(
+    query: string,
+    limit: number = 25,
+    after?: string
+  ): Promise<RedditListingResponse<RedditSubreddit>> {
+    const endpoint = '/subreddits/search.json';
+    const params: Record<string, any> = { q: query, limit };
+    if (after) params.after = after;
+    return this.get<RedditListingResponse<RedditSubreddit>>(endpoint, params);
+  }
+
+  /**
+   * Get user overview (posts and comments combined)
+   */
+  async getUserOverview(
+    username: string,
+    sort: 'hot' | 'new' | 'top' | 'controversial' = 'new',
+    limit: number = 25,
+    after?: string,
+    time?: 'hour' | 'day' | 'week' | 'month' | 'year' | 'all'
+  ): Promise<RedditListingResponse<RedditPost | RedditComment>> {
+    const endpoint = `/user/${username}/overview.json`;
+    const params: Record<string, any> = { sort, limit };
+    if (after) params.after = after;
+    if (time && (sort === 'top' || sort === 'controversial')) params.t = time;
+    return this.get<RedditListingResponse<RedditPost | RedditComment>>(endpoint, params);
   }
 
   /**

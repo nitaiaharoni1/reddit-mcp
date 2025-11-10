@@ -75,13 +75,13 @@ export const searchTools: MCPToolDefinition[] = [
   {
     name: 'search_reddit',
     description:
-      'Search Reddit for posts matching a query. Can search all of Reddit or within a specific subreddit. Supports sorting and pagination.',
+      'Search Reddit for posts matching a query string. Can search across all of Reddit or limit results to a specific subreddit. Supports multiple sorting options (relevance, hot, top, new, comments) and time-based filtering. Includes pagination for browsing through large result sets. Essential for finding specific content, discussions, or information on Reddit.',
     inputSchema: {
       type: 'object',
       properties: {
         query: {
           type: 'string',
-          description: 'Search query (up to 512 characters)',
+          description: 'Search query string (up to 512 characters)',
         },
         subreddit: {
           type: 'string',
@@ -90,13 +90,13 @@ export const searchTools: MCPToolDefinition[] = [
         sort: {
           type: 'string',
           enum: ['relevance', 'hot', 'top', 'new', 'comments'],
-          description: 'Sort order for results (default: relevance)',
+          description: 'Sort order for results: relevance (best match), hot (trending), top (highest scored), new (recent), comments (most discussed). Default: relevance',
           default: 'relevance',
         },
         time: {
           type: 'string',
           enum: ['hour', 'day', 'week', 'month', 'year', 'all'],
-          description: 'Time period for sorting (useful with top/comments sort)',
+          description: 'Time period filter for sorting (useful with top/comments sort)',
         },
         limit: {
           type: 'number',
@@ -105,7 +105,7 @@ export const searchTools: MCPToolDefinition[] = [
         },
         after: {
           type: 'string',
-          description: 'Pagination token from previous response to get next page',
+          description: 'Pagination token from previous response to get next page of results',
         },
       },
       required: ['query'],

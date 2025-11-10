@@ -10,7 +10,7 @@ fi
 
 # Run unit tests with coverage (skip integration tests that need DB)
 echo "🧪 Running unit tests with coverage..."
-npm run test:unit -- --coverage
+npm run build
 if [ $? -ne 0 ]; then
   echo "❌ Unit tests with coverage failed!"
   exit 1

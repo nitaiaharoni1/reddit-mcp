@@ -1,11 +1,11 @@
 {
-  "name": "reddit-mcp",
+  "name": "mcp-reddit",
   "version": "1.0.0",
   "description": "A Model Context Protocol (MCP) server for Reddit API integration. Provides AI assistants with access to Reddit data including subreddits, posts, comments, users, and search functionality.",
   "main": "dist/server.js",
   "types": "dist/server.d.ts",
   "bin": {
-    "reddit-mcp": "dist/server.js"
+    "mcp-reddit": "dist/server.js"
   },
   "publishConfig": {
     "access": "public",

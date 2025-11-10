@@ -123,7 +123,7 @@ export const postTools: MCPToolDefinition[] = [
   {
     name: 'get_post_comments',
     description:
-      'Get comments for a specific Reddit post. Returns the post information and its comments sorted by the specified method.',
+      'Retrieve all comments for a specific Reddit post along with the post details. Supports multiple comment sorting methods including confidence (best), top (highest scored), new (recent), controversial (divisive), old (chronological), random, qa (Q&A format), and live (real-time). Returns the full comment thread structure with nested replies. Essential for reading discussions and understanding community responses to posts.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -138,7 +138,7 @@ export const postTools: MCPToolDefinition[] = [
         sort: {
           type: 'string',
           enum: ['confidence', 'top', 'new', 'controversial', 'old', 'random', 'qa', 'live'],
-          description: 'Sort order for comments (default: top)',
+          description: 'Sort order for comments: confidence (best), top (highest scored), new (recent), controversial (divisive), old (chronological), random, qa (Q&A format), live (real-time). Default: top',
           default: 'top',
         },
         limit: {
@@ -153,7 +153,7 @@ export const postTools: MCPToolDefinition[] = [
   },
   {
     name: 'get_post',
-    description: 'Get detailed information about a specific Reddit post by its ID.',
+    description: 'Fetch detailed information about a specific Reddit post by its ID, including title, content, author, scores, comment count, timestamps, and metadata. Useful for retrieving complete post details when you have the post ID.',
     inputSchema: {
       type: 'object',
       properties: {

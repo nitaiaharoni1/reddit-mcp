@@ -7,6 +7,8 @@ import { subredditTools } from './subreddits';
 import { postTools } from './posts';
 import { searchTools } from './search';
 import { userTools } from './users';
+import { frontPageTools } from './frontpage';
+import { discoveryTools } from './discovery';
 import { MCPToolDefinition, MCPResult } from '../types/mcp';
 
 // Combine all tools
@@ -15,6 +17,8 @@ const allTools: MCPToolDefinition[] = [
   ...postTools,
   ...searchTools,
   ...userTools,
+  ...frontPageTools,
+  ...discoveryTools,
 ];
 
 /**

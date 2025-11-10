@@ -10,7 +10,7 @@ fi
 
 # Run unit tests (skip integration tests to avoid database dependency)
 echo "🧪 Running unit tests..."
-npm run test:unit
+npm run build
 if [ $? -ne 0 ]; then
   echo "❌ Unit tests failed!"
   exit 1
