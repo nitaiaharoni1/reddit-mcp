@@ -26,10 +26,7 @@ async function build() {
       external: [
         // Keep external dependencies as external
         '@modelcontextprotocol/sdk',
-        'pg',
-        'mysql2', 
-        'sqlite3',
-        'sqlite',
+        'axios',
         'dotenv'
       ],
       define: {

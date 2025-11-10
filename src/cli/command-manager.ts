@@ -1,6 +1,6 @@
 /**
  * CLI Command Manager
- * Manages CLI command execution
+ * Manages CLI command execution for Reddit MCP
  */
 
 /**
@@ -22,10 +22,10 @@ export class CommandManager {
    */
   static executeHelp(): void {
     console.log(`
-Claude Multi-Database MCP Server
+Reddit MCP Server
 
 Usage:
-  claude-multi-database-mcp [options]
+  reddit-mcp [options]
 
 Options:
   --help, -h        Show this help message

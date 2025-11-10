@@ -41,14 +41,24 @@ export function getClaudeConfigPath(): string {
 /**
  * Generate Claude Desktop configuration for NPX usage
  */
-export function generateNpxConfig(databaseUrl: string): ClaudeConfig {
+export function generateNpxConfig(redditConfig: {
+  clientId: string;
+  clientSecret: string;
+  userAgent: string;
+  username?: string;
+  password?: string;
+}): ClaudeConfig {
   return {
     mcpServers: {
-      'database-mcp': {
+      'reddit-mcp': {
         command: 'npx',
-        args: ['database-mcp'],
+        args: ['reddit-mcp'],
         env: {
-          DATABASE_URL: databaseUrl
+          REDDIT_CLIENT_ID: redditConfig.clientId,
+          REDDIT_CLIENT_SECRET: redditConfig.clientSecret,
+          REDDIT_USER_AGENT: redditConfig.userAgent,
+          ...(redditConfig.username && { REDDIT_USERNAME: redditConfig.username }),
+          ...(redditConfig.password && { REDDIT_PASSWORD: redditConfig.password }),
         }
       }
     }
@@ -58,13 +68,23 @@ export function generateNpxConfig(databaseUrl: string): ClaudeConfig {
 /**
  * Generate Claude Desktop configuration for global installation
  */
-export function generateGlobalConfig(databaseUrl: string): ClaudeConfig {
+export function generateGlobalConfig(redditConfig: {
+  clientId: string;
+  clientSecret: string;
+  userAgent: string;
+  username?: string;
+  password?: string;
+}): ClaudeConfig {
   return {
     mcpServers: {
-      'database-mcp': {
-        command: 'database-mcp',
+      'reddit-mcp': {
+        command: 'reddit-mcp',
         env: {
-          DATABASE_URL: databaseUrl
+          REDDIT_CLIENT_ID: redditConfig.clientId,
+          REDDIT_CLIENT_SECRET: redditConfig.clientSecret,
+          REDDIT_USER_AGENT: redditConfig.userAgent,
+          ...(redditConfig.username && { REDDIT_USERNAME: redditConfig.username }),
+          ...(redditConfig.password && { REDDIT_PASSWORD: redditConfig.password }),
         }
       }
     }
@@ -74,14 +94,24 @@ export function generateGlobalConfig(databaseUrl: string): ClaudeConfig {
 /**
  * Generate Claude Desktop configuration for local development
  */
-export function generateLocalConfig(databaseUrl: string, projectPath: string): ClaudeConfig {
+export function generateLocalConfig(redditConfig: {
+  clientId: string;
+  clientSecret: string;
+  userAgent: string;
+  username?: string;
+  password?: string;
+}, projectPath: string): ClaudeConfig {
   return {
     mcpServers: {
-      'database-mcp': {
+      'reddit-mcp': {
         command: 'node',
         args: [path.join(projectPath, 'dist', 'server.js')],
         env: {
-          DATABASE_URL: databaseUrl
+          REDDIT_CLIENT_ID: redditConfig.clientId,
+          REDDIT_CLIENT_SECRET: redditConfig.clientSecret,
+          REDDIT_USER_AGENT: redditConfig.userAgent,
+          ...(redditConfig.username && { REDDIT_USERNAME: redditConfig.username }),
+          ...(redditConfig.password && { REDDIT_PASSWORD: redditConfig.password }),
         }
       }
     }
@@ -130,9 +160,15 @@ export function writeClaudeConfig(config: ClaudeConfig): boolean {
 }
 
 /**
- * Merge database-mcp configuration into existing Claude config
+ * Merge reddit-mcp configuration into existing Claude config
  */
-export function mergeClaudeConfig(databaseUrl: string, useNpx: boolean = true): boolean {
+export function mergeClaudeConfig(redditConfig: {
+  clientId: string;
+  clientSecret: string;
+  userAgent: string;
+  username?: string;
+  password?: string;
+}, useNpx: boolean = true): boolean {
   try {
     let existingConfig = readClaudeConfig();
     
@@ -146,11 +182,11 @@ export function mergeClaudeConfig(databaseUrl: string, useNpx: boolean = true): 
     
     // Generate the appropriate configuration
     const newConfig = useNpx 
-      ? generateNpxConfig(databaseUrl)
-      : generateGlobalConfig(databaseUrl);
+      ? generateNpxConfig(redditConfig)
+      : generateGlobalConfig(redditConfig);
     
-    // Merge database-mcp server configuration
-    existingConfig.mcpServers['database-mcp'] = newConfig.mcpServers['database-mcp'];
+    // Merge reddit-mcp server configuration
+    existingConfig.mcpServers['reddit-mcp'] = newConfig.mcpServers['reddit-mcp'];
     
     return writeClaudeConfig(existingConfig);
   } catch (error) {

@@ -3,32 +3,24 @@
  * Formats help text for CLI commands
  */
 
-export function formatHelp(
-  packageJson: any,
-  supportedTypes: string[],
-  examples: any,
-): string {
+export function formatHelp(packageJson: any): string {
   return `
 ${packageJson.name} v${packageJson.version}
 
 Usage:
-  claude-multi-database-mcp [options]
+  reddit-mcp [options]
 
 Options:
   --help, -h        Show this help message
   --version, -v     Show version information
-  --configure       Show configuration instructions
-  --find-config     Show config file location
 
-Supported Databases:
-${supportedTypes.map((type: string) => `  - ${type}`).join('\n')}
+Environment Variables:
+  REDDIT_CLIENT_ID        Your Reddit app Client ID (required)
+  REDDIT_CLIENT_SECRET    Your Reddit app Client Secret (required)
+  REDDIT_USER_AGENT       User-Agent string (required)
+  REDDIT_USERNAME         Your Reddit username (optional)
+  REDDIT_PASSWORD         Your Reddit password (optional)
 
-Examples:
-${Object.entries(examples)
-  .map(
-    ([type, urls]: [string, any]) =>
-      `\n${type.toUpperCase()}:\n${urls.map((url: string) => `  ${url}`).join('\n')}`,
-  )
-  .join('\n')}
+For more information, visit: https://github.com/nitaiaharoni1/reddit-mcp
 `;
 }
