@@ -168,6 +168,15 @@ junit.xml
 *.test.js.map
 *.spec.js.map
 
+# Test files with secrets (use environment variables instead)
+test-reddit.ts
+test-mcp-server.ts
+
+# Files that may contain secrets
+*.local.*
+*secrets*
+*credentials*
+
 # IDE files
 .idea/
 *.swp

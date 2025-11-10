@@ -4,29 +4,34 @@
 
 All tests passed successfully! Your Reddit MCP server is working correctly.
 
-## 🔑 Your Reddit Credentials
+## 🔑 Setting Up Reddit Credentials
 
-```
-Client ID: your_client_id_here
-Client Secret: your_client_secret_here
-Username: yourusername
-User-Agent: reddit-mcp:1.0.0 (by /u/yourusername)
+**⚠️ IMPORTANT: Never commit your Reddit credentials to git!**
+
+Get your credentials from https://www.reddit.com/prefs/apps and set them as environment variables:
+
+```bash
+export REDDIT_CLIENT_ID="your_client_id_here"
+export REDDIT_CLIENT_SECRET="your_client_secret_here"
+export REDDIT_USER_AGENT="reddit-mcp:1.0.0 (by /u/yourusername)"
+export REDDIT_USERNAME="your_username"  # Optional
+export REDDIT_PASSWORD="your_password"  # Optional
 ```
 
 ## 🧪 Test Commands
 
 ### Test Reddit API Client Directly
 ```bash
-REDDIT_CLIENT_ID="your_client_id_here" \
-REDDIT_CLIENT_SECRET="your_client_secret_here" \
+REDDIT_CLIENT_ID="your_client_id" \
+REDDIT_CLIENT_SECRET="your_client_secret" \
 REDDIT_USER_AGENT="reddit-mcp:1.0.0 (by /u/yourusername)" \
 npx ts-node test-reddit.ts
 ```
 
 ### Test MCP Server Tools
 ```bash
-REDDIT_CLIENT_ID="your_client_id_here" \
-REDDIT_CLIENT_SECRET="your_client_secret_here" \
+REDDIT_CLIENT_ID="your_client_id" \
+REDDIT_CLIENT_SECRET="your_client_secret" \
 REDDIT_USER_AGENT="reddit-mcp:1.0.0 (by /u/yourusername)" \
 npx ts-node test-mcp-server.ts
 ```
