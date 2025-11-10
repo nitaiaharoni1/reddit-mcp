@@ -30,7 +30,7 @@ npm run publish:public
 
 ### 3. Verify Publication
 ```bash
-npx database-mcp --version
+npx reddit-mcp --version
 ```
 
 ## Usage After Publishing
@@ -38,43 +38,44 @@ npx database-mcp --version
 Users can now use your package with NPX without installation:
 
 ```bash
-# Setup database connection
-npx database-mcp init "postgresql://user:pass@host:port/db"
-
-# Check status
-npx database-mcp status
-
 # Show help
-npx database-mcp --help
+npx reddit-mcp --help
+
+# Show version
+npx reddit-mcp --version
 ```
 
 ## Claude Desktop Configuration
 
-After running `npx database-mcp init`, users will have this configuration in their Claude Desktop config:
+Users need to configure Reddit credentials in their Claude Desktop config:
 
 ```json
 {
   "mcpServers": {
-    "database-mcp": {
+    "reddit-mcp": {
       "command": "npx",
-      "args": ["database-mcp"],
+      "args": ["reddit-mcp"],
       "env": {
-        "DATABASE_URL": "their_connection_string"
+        "REDDIT_CLIENT_ID": "their_client_id",
+        "REDDIT_CLIENT_SECRET": "their_client_secret",
+        "REDDIT_USER_AGENT": "reddit-mcp:1.0.0 (by /u/theirusername)"
       }
     }
   }
 }
 ```
 
-Instead of the old local path:
+Or for local development:
 ```json
 {
   "mcpServers": {
-    "database": {
+    "reddit-mcp": {
       "command": "node",
-      "args": ["/Users/nitaiaharoni/REPOS/database-mcp/dist/server.js"],
+      "args": ["/path/to/reddit-mcp/dist/server.js"],
       "env": {
-        "DATABASE_URL": "postgresql://..."
+        "REDDIT_CLIENT_ID": "their_client_id",
+        "REDDIT_CLIENT_SECRET": "their_client_secret",
+        "REDDIT_USER_AGENT": "reddit-mcp:1.0.0 (by /u/theirusername)"
       }
     }
   }
@@ -95,5 +96,7 @@ Instead of the old local path:
 If users have issues:
 1. Check if they have Node.js installed (`node --version`)
 2. Verify NPX is available (`npx --version`)
-3. Check their DATABASE_URL format
-4. Ensure Claude Desktop is restarted after configuration 
+3. Verify Reddit API credentials are set correctly
+4. Check that REDDIT_USER_AGENT follows the required format
+5. Ensure Claude Desktop is restarted after configuration
+6. Get Reddit API credentials from https://www.reddit.com/prefs/apps 
