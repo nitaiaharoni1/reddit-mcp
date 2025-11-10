@@ -40,8 +40,8 @@ npx ts-node test-mcp-server.ts
 
 ### Development Mode
 ```bash
-REDDIT_CLIENT_ID="your_client_id_here" \
-REDDIT_CLIENT_SECRET="your_client_secret_here" \
+REDDIT_CLIENT_ID="your_client_id" \
+REDDIT_CLIENT_SECRET="your_client_secret" \
 REDDIT_USER_AGENT="reddit-mcp:1.0.0 (by /u/yourusername)" \
 npm run dev
 ```
