@@ -53,7 +53,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     const result = await handleToolCall({ params: { name, arguments: args } });
-    return result;
+    // Ensure result matches MCP SDK format
+    if (result.isError) {
+      return {
+        content: result.content,
+        isError: true,
+      } as any;
+    }
+    return {
+      content: result.content,
+    } as any;
   } catch (error: any) {
     return {
       content: [
@@ -63,7 +72,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         },
       ],
       isError: true,
-    };
+    } as any;
   }
 });
 

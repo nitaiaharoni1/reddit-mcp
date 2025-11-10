@@ -79,7 +79,7 @@ async function build() {
       description: packageJson.description,
       main: 'server.js',
       bin: {
-        'reddit-mcp': 'server.js'
+        'mcp-reddit': 'server.js'
       },
       dependencies: packageJson.dependencies,
       engines: packageJson.engines
