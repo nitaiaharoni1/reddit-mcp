@@ -1,0 +1,23 @@
+echo "🔍 Running pre-commit checks..."
+
+# Check TypeScript compilation
+echo "📝 Checking TypeScript compilation..."
+npm run build
+if [ $? -ne 0 ]; then
+  echo "❌ TypeScript compilation failed!"
+  exit 1
+fi
+
+# Run unit tests (skip integration tests to avoid database dependency)
+echo "🧪 Running unit tests..."
+npm run test:unit
+if [ $? -ne 0 ]; then
+  echo "❌ Unit tests failed!"
+  exit 1
+fi
+
+# Check if package.json version is consistent
+echo "📋 Validating package consistency..."
+npm run version:check
+
+echo "✅ All pre-commit checks passed!"

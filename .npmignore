@@ -1,0 +1,51 @@
+# Source files (only dist/ should be published)
+src/
+server.ts
+*.ts
+tsconfig.json
+build.js
+release.ts
+
+# Tests
+tests/
+*.test.ts
+*.test.js
+jest.config.js
+coverage/
+
+# Development files
+.env
+.env.*
+test.db
+TESTING.md
+mcp-config.json
+
+# Build tools
+nodemon.json
+.husky/
+
+# Documentation (keep README.md and LICENSE)
+CHANGELOG.md
+
+# IDE and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# NPM
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+*.tmp
+*.temp
+.cache/ 

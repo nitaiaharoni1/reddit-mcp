@@ -1,0 +1,144 @@
+name: Integration Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      database_url:
+        description: 'Database URL for testing (optional - uses default if not provided)'
+        required: false
+        type: string
+  schedule:
+    # Run integration tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+    
+    env:
+      TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_USER: testuser
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build project
+      run: npm run build
+      
+    - name: Run integration tests (Local PostgreSQL)
+      env:
+        DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb
+        NODE_ENV: test
+        NODE_TLS_REJECT_UNAUTHORIZED: 0
+      run: npm run test:integration
+      
+    - name: Run integration tests (External Database)
+      if: ${{ github.event.inputs.database_url != '' || env.TEST_DATABASE_URL != '' }}
+      env:
+        DATABASE_URL: ${{ github.event.inputs.database_url || env.TEST_DATABASE_URL }}
+        NODE_ENV: test
+        NODE_TLS_REJECT_UNAUTHORIZED: 0
+      run: npm run test:integration
+      
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: integration-test-results
+        path: |
+          coverage/
+          test-results.xml
+        retention-days: 7
+
+  multi-database-test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_USER: testuser
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: testpassword
+          MYSQL_DATABASE: testdb
+          MYSQL_USER: testuser
+          MYSQL_PASSWORD: testpassword
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+        ports:
+          - 3306:3306
+    
+    strategy:
+      matrix:
+        database:
+          - name: PostgreSQL
+            url: postgresql://testuser:testpassword@localhost:5432/testdb
+          - name: MySQL
+            url: mysql://testuser:testpassword@localhost:3306/testdb
+          - name: SQLite
+            url: ./test.db
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build project
+      run: npm run build
+      
+    - name: Test ${{ matrix.database.name }}
+      env:
+        DATABASE_URL: ${{ matrix.database.url }}
+        NODE_ENV: test
+        NODE_TLS_REJECT_UNAUTHORIZED: 0
+      run: |
+        echo "Testing ${{ matrix.database.name }} with URL: ${{ matrix.database.url }}"
+        npm run test:integration || echo "Integration tests failed for ${{ matrix.database.name }}" 

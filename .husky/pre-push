@@ -1,0 +1,27 @@
+echo "🚀 Running pre-push checks..."
+
+# Ensure clean build
+echo "🧹 Clean building project..."
+npm run clean && npm run build
+if [ $? -ne 0 ]; then
+  echo "❌ Clean build failed!"
+  exit 1
+fi
+
+# Run unit tests with coverage (skip integration tests that need DB)
+echo "🧪 Running unit tests with coverage..."
+npm run test:unit -- --coverage
+if [ $? -ne 0 ]; then
+  echo "❌ Unit tests with coverage failed!"
+  exit 1
+fi
+
+# Verify package can be packed
+echo "📦 Verifying package can be packed..."
+npm pack --dry-run > /dev/null
+if [ $? -ne 0 ]; then
+  echo "❌ Package verification failed!"
+  exit 1
+fi
+
+echo "✅ All pre-push checks passed! Safe to push." 

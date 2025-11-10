@@ -1,0 +1,78 @@
+# name: Release
+
+# on:
+#   release:
+#     types: [published]
+#   push:
+#     tags:
+#       - 'v*'
+
+# # Add explicit permissions for the workflow
+# permissions:
+#   contents: write
+#   issues: write
+#   pull-requests: write
+
+# jobs:
+#   publish:
+#     runs-on: ubuntu-latest
+    
+#     # Also add permissions at the job level for better security
+#     permissions:
+#       contents: write
+#       packages: write
+    
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v4
+      
+#     - name: Setup Node.js
+#       uses: actions/setup-node@v4
+#       with:
+#         node-version: '20.x'
+#         cache: 'npm'
+#         registry-url: 'https://registry.npmjs.org'
+        
+#     - name: Install dependencies
+#       run: npm ci
+      
+#     - name: Run tests
+#       run: npm run test:unit
+      
+#     - name: Build project
+#       run: npm run build
+      
+#     - name: Verify package integrity
+#       run: npm pack --dry-run
+      
+#     - name: Publish to npm
+#       run: npm publish
+#       env:
+#         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        
+#     - name: Create GitHub Release Notes
+#       if: github.event_name == 'push'
+#       uses: actions/github-script@v7
+#       with:
+#         script: |
+#           const { data: release } = await github.rest.repos.createRelease({
+#             owner: context.repo.owner,
+#             repo: context.repo.repo,
+#             tag_name: context.ref.replace('refs/tags/', ''),
+#             name: context.ref.replace('refs/tags/', ''),
+#             generate_release_notes: true
+#           });
+          
+#           console.log(`Created release: ${release.html_url}`);
+
+#   notify:
+#     needs: publish
+#     runs-on: ubuntu-latest
+#     if: success()
+    
+#     steps:
+#     - name: Notification
+#       run: |
+#         echo "🎉 Successfully published database-mcp to npm!"
+#         echo "📦 Package: https://www.npmjs.com/package/database-mcp"
+#         echo "🏷️  Version: ${{ github.ref_name }}" 
