@@ -27,8 +27,11 @@ const getPostComments = async (args: {
     const responses = await client.getPostComments(subreddit, postId, sort, limit);
     
     // First response is the post, second is comments
-    const postData = responses[0]?.data?.children?.[0]?.data;
-    const commentsData = responses[1]?.data?.children || [];
+    const postListing = responses[0];
+    const commentsListing = responses[1];
+    
+    const postData = postListing?.data?.children?.[0]?.data as any;
+    const commentsData = commentsListing?.data?.children || [];
 
     const comments = commentsData.map((child: any) => {
       const comment = child.data;
