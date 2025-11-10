@@ -95,6 +95,11 @@ Restart Claude Desktop after setup.
    }
    ```
 
+   Config file locations:
+   - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+   - **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
 4. **Restart Claude Desktop** and you're ready!
 
 ## 🎯 Available Tools
@@ -102,7 +107,7 @@ Restart Claude Desktop after setup.
 The Reddit MCP server provides 8 powerful tools for Reddit interaction:
 
 ### Subreddit Tools
-- **`get_subreddit_posts`** - Get posts from a subreddit with sorting options
+- **`get_subreddit_posts`** - Get posts from a subreddit with sorting options (hot, new, top, rising)
 - **`get_subreddit_info`** - Get subreddit information and metadata
 
 ### Post Tools
@@ -179,8 +184,10 @@ The server automatically handles rate limiting and token refresh.
 
 ## 🧪 Testing
 
+### Running Tests
+
 ```bash
-# Run tests
+# Run tests (when implemented)
 npm test
 
 # Run tests in watch mode
@@ -189,6 +196,26 @@ npm run test:watch
 # Run tests with coverage
 npm run test:coverage
 ```
+
+### Testing Locally
+
+You can test the Reddit API client directly using the test scripts (not committed to git):
+
+```bash
+# Test Reddit API Client
+REDDIT_CLIENT_ID="your_client_id" \
+REDDIT_CLIENT_SECRET="your_client_secret" \
+REDDIT_USER_AGENT="reddit-mcp:1.0.0 (by /u/yourusername)" \
+npx ts-node test-reddit.ts
+
+# Test MCP Server Tools
+REDDIT_CLIENT_ID="your_client_id" \
+REDDIT_CLIENT_SECRET="your_client_secret" \
+REDDIT_USER_AGENT="reddit-mcp:1.0.0 (by /u/yourusername)" \
+npx ts-node test-mcp-server.ts
+```
+
+**Note**: Test files (`test-reddit.ts`, `test-mcp-server.ts`) are in `.gitignore` and use environment variables for credentials.
 
 ## 🏗️ Development
 
@@ -216,10 +243,96 @@ npm run test:coverage
    npm run build
    ```
 
-5. **Test locally:**
+5. **Run in development mode:**
    ```bash
    npm run dev
    ```
+
+### Development Scripts
+
+- `npm run build` - Build the project
+- `npm run dev` - Run in development mode
+- `npm run start` - Run production build
+- `npm run clean` - Clean build artifacts
+
+## 📦 Publishing
+
+### Prerequisites
+
+1. **NPM Account**: Make sure you have an NPM account and are logged in
+   ```bash
+   npm login
+   ```
+
+2. **Version Update**: Update the version in `package.json` if needed
+   ```bash
+   npm version patch  # or minor/major
+   ```
+
+### Publishing Steps
+
+1. **Pre-publish Check:**
+   ```bash
+   npm run publish:check
+   ```
+   This will clean, build, and show what files will be included.
+
+2. **Publish to NPM:**
+   ```bash
+   npm run publish:public
+   ```
+
+3. **Verify Publication:**
+   ```bash
+   npx reddit-mcp --version
+   ```
+
+### Benefits of NPX Approach
+
+- ✅ **No installation required** - Users can run immediately
+- ✅ **Always latest version** - NPX fetches the newest version
+- ✅ **No global pollution** - Doesn't install packages globally
+- ✅ **Cross-platform** - Works on Windows, macOS, Linux
+- ✅ **Easy updates** - Users automatically get updates
+
+## 🔒 Security
+
+### ⚠️ Important: Never Commit Credentials
+
+**Never commit your Reddit API credentials to git!**
+
+### Best Practices
+
+✅ **DO:**
+- Use environment variables for all secrets
+- Add `.env` files to `.gitignore`
+- Use `.env.example` with placeholder values
+- Never commit actual credentials
+- Test files are in `.gitignore` - they won't be committed
+
+❌ **DON'T:**
+- Hardcode secrets in source files
+- Commit test files with real credentials
+- Share credentials in documentation
+- Store secrets in version control
+
+### Environment Variables
+
+Always set credentials via environment variables:
+
+```bash
+export REDDIT_CLIENT_ID="your_client_id"
+export REDDIT_CLIENT_SECRET="your_client_secret"
+export REDDIT_USER_AGENT="reddit-mcp:1.0.0 (by /u/yourusername)"
+```
+
+### Credential Rotation
+
+If you've accidentally committed credentials:
+1. Go to https://www.reddit.com/prefs/apps
+2. Delete the old app or regenerate the client secret
+3. Create a new app with new credentials
+4. Update your environment variables
 
 ## 📄 License
 
