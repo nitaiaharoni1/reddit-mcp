@@ -74,7 +74,7 @@
   "preferGlobal": true,
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.13.0",
-    "dotenv": "^16.5.0",
+    "dotenv": "^17.2.3",
     "axios": "^1.7.9"
   },
   "devDependencies": {
