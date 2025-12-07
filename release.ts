@@ -145,7 +145,7 @@ async function main(): Promise<void> {
     // Update version
     updatePackageVersion(newVersion);
     runCommand('npm run build', 'Building project');
-    runCommand('npm run test:unit', 'Running unit tests');
+    // Note: Tests are run via pre-commit hooks, skipping here
     
     // Git operations
     runCommand(`git add package.json`, 'Staging version change');
