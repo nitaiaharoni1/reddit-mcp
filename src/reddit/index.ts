@@ -6,7 +6,9 @@
 import { RedditClient, RedditConfig } from './client';
 import * as dotenv from 'dotenv';
 
-dotenv.config();
+// Load environment variables silently (no output to stdout)
+// This prevents dotenv from interfering with JSON-RPC protocol
+dotenv.config({ debug: false });
 
 let redditClient: RedditClient | null = null;
 

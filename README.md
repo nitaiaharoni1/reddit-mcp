@@ -66,12 +66,14 @@ Restart Claude Desktop after setup.
 
 2. **Configure Claude Desktop:**
    Add to your Claude Desktop config file:
+   
+   **Option A: Using npx (with --quiet to suppress npm warnings)**
    ```json
    {
      "mcpServers": {
        "mcp-reddit": {
          "command": "npx",
-         "args": ["mcp-reddit"],
+         "args": ["--quiet", "mcp-reddit"],
          "env": {
            "REDDIT_CLIENT_ID": "your_client_id",
            "REDDIT_CLIENT_SECRET": "your_client_secret",
@@ -84,7 +86,27 @@ Restart Claude Desktop after setup.
    }
    ```
    
-   **Note:** All five environment variables (`REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_USER_AGENT`, `REDDIT_USERNAME`, and `REDDIT_PASSWORD`) are required for the server to function properly.
+   **Option B: Global installation (recommended for production)**
+   ```json
+   {
+     "mcpServers": {
+       "mcp-reddit": {
+         "command": "mcp-reddit",
+         "env": {
+           "REDDIT_CLIENT_ID": "your_client_id",
+           "REDDIT_CLIENT_SECRET": "your_client_secret",
+           "REDDIT_USER_AGENT": "mcp-reddit:1.0.0 (by /u/yourusername)",
+           "REDDIT_USERNAME": "your_username",
+           "REDDIT_PASSWORD": "your_password"
+         }
+       }
+     }
+   }
+   ```
+   
+   **Note:** 
+   - All five environment variables (`REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_USER_AGENT`, `REDDIT_USERNAME`, and `REDDIT_PASSWORD`) are required for the server to function properly.
+   - Using `--quiet` with npx suppresses npm warnings that can interfere with JSON-RPC communication. For production use, consider installing globally (`npm install -g mcp-reddit`) and using Option B.
 
    Config file locations:
    - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`

@@ -5,6 +5,10 @@
  * Model Context Protocol server for Reddit API integration
  */
 
+// CRITICAL: MCP servers must ONLY output JSON-RPC messages to stdout
+// All logging and debug output must go to stderr
+// This ensures npm warnings and other stdout output don't interfere with JSON-RPC
+
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
