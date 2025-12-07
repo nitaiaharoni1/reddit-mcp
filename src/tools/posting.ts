@@ -273,7 +273,7 @@ export const postingTools: MCPToolDefinition[] = [
   {
     name: 'reddit_upload_image',
     description:
-      'Upload an image to Reddit\'s native servers (i.redd.it) for inline display in posts. Accepts image URLs (will download) or local file paths. Returns a Reddit-hosted URL (i.redd.it) that can be used in submit_post with kind="image". Requires user authentication (REDDIT_USERNAME and REDDIT_PASSWORD).',
+      'Upload an image to Reddit\'s native servers (i.redd.it) for inline display in posts. IMPORTANT: Before uploading and posting images, use reddit_get_subreddit_rules to check if images are allowed and comply with the subreddit rules. Accepts image URLs (will download) or local file paths. Returns a Reddit-hosted URL (i.redd.it) that can be used in submit_post with kind="link". Requires user authentication (REDDIT_USERNAME and REDDIT_PASSWORD).',
     inputSchema: {
       type: 'object',
       properties: {
@@ -358,7 +358,7 @@ export const postingTools: MCPToolDefinition[] = [
   {
     name: 'reddit_submit_post',
     description:
-      'Submit a new post to a subreddit. Supports link posts (with URL) and self/text posts (with text content). For image posts, use upload_image first to get a Reddit-hosted URL (i.redd.it), then use that URL here with kind="link" - Reddit-hosted images will display inline automatically. Requires user authentication (REDDIT_USERNAME and REDDIT_PASSWORD). Can optionally mark posts as NSFW, spoiler, set flair, and control reply notifications.',
+      'Submit a new post to a subreddit. IMPORTANT: Before posting, always use reddit_get_subreddit_rules to check the subreddit rules to ensure your content complies with community guidelines. This prevents post removal and potential bans. Supports link posts (with URL) and self/text posts (with text content). For image posts, use upload_image first to get a Reddit-hosted URL (i.redd.it), then use that URL here with kind="link" - Reddit-hosted images will display inline automatically. Requires user authentication (REDDIT_USERNAME and REDDIT_PASSWORD). Can optionally mark posts as NSFW, spoiler, set flair, and control reply notifications.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -414,7 +414,7 @@ export const postingTools: MCPToolDefinition[] = [
   {
     name: 'reddit_submit_comment',
     description:
-      'Submit a comment or reply to a post or comment. Requires user authentication (REDDIT_USERNAME and REDDIT_PASSWORD). The parent_id should be a post ID (t3_xxxxx) for top-level comments or a comment ID (t1_xxxxx) for replies.',
+      'Submit a comment or reply to a post or comment. IMPORTANT: Before commenting, consider using reddit_get_subreddit_rules to check the subreddit rules to ensure your comment complies with community guidelines. Requires user authentication (REDDIT_USERNAME and REDDIT_PASSWORD). The parent_id should be a post ID (t3_xxxxx) for top-level comments or a comment ID (t1_xxxxx) for replies.',
     inputSchema: {
       type: 'object',
       properties: {

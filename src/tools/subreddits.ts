@@ -106,6 +106,41 @@ const getSubredditInfo = async (args: { subreddit: string }) => {
   }
 };
 
+/**
+ * Get subreddit rules
+ */
+const getSubredditRules = async (args: { subreddit: string }) => {
+  try {
+    const client = getRedditClient();
+    const subreddit = args.subreddit.replace(/^r\//, ''); // Remove r/ prefix if present
+
+    console.error(`🔍 Fetching rules for r/${subreddit}...`);
+
+    const rulesData = await client.getSubredditRules(subreddit);
+
+    const result = {
+      subreddit,
+      rules: rulesData.rules.map((rule, index) => ({
+        number: index + 1,
+        priority: rule.priority,
+        short_name: rule.short_name,
+        violation_reason: rule.violation_reason,
+        description: rule.description,
+        description_html: rule.description_html,
+        created_utc: rule.created_utc,
+      })),
+      count: rulesData.rules.length,
+    };
+
+    console.error(`✅ Retrieved ${rulesData.rules.length} rules for r/${subreddit}`);
+
+    return formatTextResult(JSON.stringify(result, null, 2));
+  } catch (error: any) {
+    console.error(`❌ Error fetching subreddit rules:`, error.message);
+    return formatErrorResult(error.message);
+  }
+};
+
 // Tool definitions
 export const subredditTools: MCPToolDefinition[] = [
   {
@@ -158,6 +193,21 @@ export const subredditTools: MCPToolDefinition[] = [
       required: ['subreddit'],
     },
     handler: getSubredditInfo,
+  },
+  {
+    name: 'reddit_get_subreddit_rules',
+    description: 'Retrieve the rules for a specific subreddit. Returns all community rules including their descriptions, violation reasons, and priority. IMPORTANT: Always check subreddit rules before posting to ensure your content complies with the community guidelines. This helps prevent post removal and potential bans.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        subreddit: {
+          type: 'string',
+          description: 'Subreddit name (e.g., "programming" or "r/programming")',
+        },
+      },
+      required: ['subreddit'],
+    },
+    handler: getSubredditRules,
   },
 ];
 

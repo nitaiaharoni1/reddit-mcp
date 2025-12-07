@@ -106,6 +106,20 @@ export interface RedditSubreddit {
   url: string;
 }
 
+export interface RedditSubredditRule {
+  kind: string;
+  short_name: string;
+  violation_reason: string;
+  description: string;
+  description_html: string | null;
+  created_utc: number | null;
+  priority: number;
+}
+
+export interface RedditSubredditRules {
+  rules: RedditSubredditRule[];
+}
+
 export interface RedditUser {
   id: string;
   name: string;
@@ -477,6 +491,15 @@ export class RedditClient {
     const endpoint = `/r/${subreddit}/about.json`;
     const response = await this.get<{ kind: string; data: RedditSubreddit }>(endpoint);
     return response.data;
+  }
+
+  /**
+   * Get subreddit rules
+   */
+  async getSubredditRules(subreddit: string): Promise<RedditSubredditRules> {
+    const endpoint = `/r/${subreddit}/about/rules.json`;
+    const response = await this.get<{ rules: RedditSubredditRule[] }>(endpoint);
+    return { rules: response.rules || [] };
   }
 
   /**
