@@ -57,7 +57,26 @@ const getUserPosts = async (args: {
 }) => {
   try {
     const client = getRedditClient();
-    const username = args.username.replace(/^u\//, ''); // Remove u/ prefix if present
+    let username = args.username.replace(/^u\//, ''); // Remove u/ prefix if present
+    
+    // If username is "me" or empty, get current authenticated user
+    if (username === 'me' || !username) {
+      try {
+        const currentUser = await client.getMe();
+        username = currentUser.name;
+        console.error(`🔍 Using current authenticated user: ${username}`);
+      } catch (error: any) {
+        // Fallback to configured username from environment
+        const configUsername = process.env.REDDIT_USERNAME;
+        if (configUsername) {
+          username = configUsername;
+          console.error(`🔍 Using configured username: ${username}`);
+        } else {
+          throw new Error('No username provided and unable to determine current user. Please provide a username or ensure REDDIT_USERNAME is set.');
+        }
+      }
+    }
+    
     const sort = args.sort || 'new';
     const limit = Math.min(args.limit || 25, 100); // Max 100 per Reddit API
     const time = args.time;
@@ -240,13 +259,13 @@ export const userTools: MCPToolDefinition[] = [
   },
   {
     name: 'get_user_posts',
-    description: 'Fetch all posts submitted by a specific Reddit user across all subreddits. Supports multiple sorting options (hot, new, top, controversial) and time-based filtering. Includes pagination for browsing through a user\'s entire post history. Perfect for analyzing a user\'s contributions or finding their best content.',
+    description: 'Fetch all posts submitted by a specific Reddit user across all subreddits. Supports multiple sorting options (hot, new, top, controversial) and time-based filtering. Includes pagination for browsing through a user\'s entire post history. Perfect for analyzing a user\'s contributions or finding their best content. Use "me" as username to get posts from the current authenticated user.',
     inputSchema: {
       type: 'object',
       properties: {
         username: {
           type: 'string',
-          description: 'Reddit username (can include u/ prefix or just the username)',
+          description: 'Reddit username (can include u/ prefix or just the username). Use "me" to get posts from the current authenticated user.',
         },
         sort: {
           type: 'string',

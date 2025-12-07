@@ -13,7 +13,7 @@ import { formatErrorResult, formatTextResult } from '../utils/result-formatter';
 const submitPost = async (args: {
   subreddit: string;
   title: string;
-  kind: 'link' | 'self' | 'image';
+  kind: 'link' | 'self';
   text?: string;
   url?: string;
   sendreplies?: boolean;
@@ -35,9 +35,6 @@ const submitPost = async (args: {
       throw new Error('URL is required for link posts');
     }
 
-    if (args.kind === 'image' && !args.url) {
-      throw new Error('URL is required for image posts (should be a Reddit-hosted or Imgur image URL)');
-    }
 
     if (args.kind === 'self' && !args.text) {
       throw new Error('Text is required for self posts');
@@ -221,71 +218,136 @@ const deletePostOrComment = async (args: {
   }
 };
 
+/**
+ * Vote on a post or comment
+ */
+const vote = async (args: {
+  thing_id: string; // Post ID (t3_xxxxx) or comment ID (t1_xxxxx)
+  direction: 'upvote' | 'downvote' | 'remove';
+}) => {
+  try {
+    const client = getRedditClient();
+
+    // Ensure thing_id has the correct prefix
+    let thingId = args.thing_id;
+    if (!thingId.startsWith('t3_') && !thingId.startsWith('t1_')) {
+      // If no prefix, assume it's a post ID
+      thingId = `t3_${thingId}`;
+    }
+
+    // Map direction to Reddit API format
+    const directionMap: Record<string, 1 | -1 | 0> = {
+      upvote: 1,
+      downvote: -1,
+      remove: 0,
+    };
+
+    const dir = directionMap[args.direction];
+    if (dir === undefined) {
+      throw new Error('direction must be "upvote", "downvote", or "remove"');
+    }
+
+    const action = args.direction === 'remove' ? 'removing vote from' : `${args.direction}ing`;
+    console.error(`👍 ${action} ${thingId}...`);
+
+    await client.vote(thingId, dir);
+
+    const result = {
+      success: true,
+      thing_id: thingId,
+      direction: args.direction,
+      action: args.direction === 'remove' ? 'vote_removed' : `vote_${args.direction}d`,
+    };
+
+    console.error(`✅ Successfully ${action} ${thingId}`);
+
+    return formatTextResult(JSON.stringify(result, null, 2));
+  } catch (error: any) {
+    console.error(`❌ Error voting:`, error.message);
+    return formatErrorResult(error.message);
+  }
+};
+
 // Tool definitions
 export const postingTools: MCPToolDefinition[] = [
   {
     name: 'upload_image',
     description:
-      'Upload an image to Imgur and return the URL. Use this to upload images before posting them to Reddit. Accepts image URLs (will download and re-upload) or base64-encoded images. Returns an Imgur URL that can be used in Reddit posts.',
+      'Upload an image to Reddit\'s native servers (i.redd.it) for inline display in posts. Accepts image URLs (will download) or local file paths. Returns a Reddit-hosted URL (i.redd.it) that can be used in submit_post with kind="image". Requires user authentication (REDDIT_USERNAME and REDDIT_PASSWORD).',
     inputSchema: {
       type: 'object',
       properties: {
         image_url: {
           type: 'string',
-          description: 'URL of the image to upload (will be downloaded and uploaded to Imgur)',
+          description: 'URL of the image to upload (will be downloaded and uploaded to Reddit)',
         },
-        image_base64: {
+        image_path: {
           type: 'string',
-          description: 'Base64-encoded image data (alternative to image_url)',
+          description: 'Local file path of the image to upload',
         },
       },
       required: [],
     },
-    handler: async (args: { image_url?: string; image_base64?: string }) => {
+    handler: async (args: { image_url?: string; image_path?: string }) => {
       try {
         const client = getRedditClient();
+        const fs = require('fs');
+        const path = require('path');
 
-        if (!args.image_url && !args.image_base64) {
-          throw new Error('Either image_url or image_base64 is required');
+        if (!args.image_url && !args.image_path) {
+          throw new Error('Either image_url or image_path is required');
         }
 
-        let imgurUrl: string;
+        let imageBuffer: Buffer;
+        let filename: string;
+        let mimeType: string;
 
-        if (args.image_url) {
-          console.error(`📤 Uploading image from ${args.image_url} to Imgur...`);
-          imgurUrl = await client.uploadImageToImgur(args.image_url);
-        } else if (args.image_base64) {
-          // For base64, we need to upload directly to Imgur
-          const uploadResponse = await axios.post(
-            'https://api.imgur.com/3/image',
-            {
-              image: args.image_base64,
-              type: 'base64',
-            },
-            {
-              headers: {
-                'Authorization': 'Client-ID 546c25a59c58ad7',
-                'Content-Type': 'application/json',
-              },
-            }
-          );
-
-          if (uploadResponse.data.success && uploadResponse.data.data?.link) {
-            imgurUrl = uploadResponse.data.data.link;
+        // Get image data
+        if (args.image_path) {
+          // Read from file
+          imageBuffer = fs.readFileSync(args.image_path);
+          filename = path.basename(args.image_path);
+          const ext = path.extname(args.image_path).toLowerCase();
+          mimeType = ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 
+                     ext === '.gif' ? 'image/gif' : 
+                     ext === '.webp' ? 'image/webp' : 'image/png';
+        } else if (args.image_url) {
+          // Download from URL
+          console.error(`📥 Downloading image from ${args.image_url}...`);
+          const response = await axios.get(args.image_url, {
+            responseType: 'arraybuffer',
+            maxContentLength: 20 * 1024 * 1024, // 20MB limit
+          });
+          imageBuffer = Buffer.from(response.data);
+          
+          // Extract filename from URL or use default
+          const urlPath = new URL(args.image_url).pathname;
+          filename = path.basename(urlPath) || 'image.png';
+          
+          // Determine mime type from content-type header or filename
+          const contentType = response.headers['content-type'];
+          if (contentType && contentType.startsWith('image/')) {
+            mimeType = contentType;
           } else {
-            throw new Error(`Imgur upload failed: ${uploadResponse.data.data?.error || 'Unknown error'}`);
+            const ext = path.extname(filename).toLowerCase();
+            mimeType = ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 
+                       ext === '.gif' ? 'image/gif' : 
+                       ext === '.webp' ? 'image/webp' : 'image/png';
           }
         } else {
-          throw new Error('Either image_url or image_base64 is required');
+          throw new Error('Either image_url or image_path is required');
         }
+
+        console.error(`📤 Uploading image to Reddit (native)...`);
+        const redditUrl = await client.uploadImageToReddit(imageBuffer, filename, mimeType);
 
         const result = {
           success: true,
-          imgur_url: imgurUrl,
-          message: 'Image uploaded successfully. Use this URL in a Reddit post with kind="link" or kind="image".',
+          url: redditUrl,
+          message: 'Image uploaded to Reddit. Use this URL in submit_post with kind="link" - Reddit-hosted images (i.redd.it) will display inline automatically.',
         };
 
-        console.error(`✅ Image uploaded successfully: ${imgurUrl}`);
+        console.error(`✅ Image uploaded successfully: ${redditUrl}`);
         return formatTextResult(JSON.stringify(result, null, 2));
       } catch (error: any) {
         console.error(`❌ Error uploading image:`, error.message);
@@ -296,7 +358,7 @@ export const postingTools: MCPToolDefinition[] = [
   {
     name: 'submit_post',
     description:
-      'Submit a new post to a subreddit. Supports link posts (with URL), self/text posts (with text content), and image posts (with image URL). For image posts, use upload_image first to get an Imgur URL, then use that URL here. Requires user authentication (REDDIT_USERNAME and REDDIT_PASSWORD). Can optionally mark posts as NSFW, spoiler, set flair, and control reply notifications.',
+      'Submit a new post to a subreddit. Supports link posts (with URL) and self/text posts (with text content). For image posts, use upload_image first to get a Reddit-hosted URL (i.redd.it), then use that URL here with kind="link" - Reddit-hosted images will display inline automatically. Requires user authentication (REDDIT_USERNAME and REDDIT_PASSWORD). Can optionally mark posts as NSFW, spoiler, set flair, and control reply notifications.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -310,8 +372,8 @@ export const postingTools: MCPToolDefinition[] = [
         },
         kind: {
           type: 'string',
-          enum: ['link', 'self', 'image'],
-          description: 'Type of post: "link" for URL posts, "self" for text posts, "image" for image posts (requires image URL)',
+          enum: ['link', 'self'],
+          description: 'Type of post: "link" for URL posts (including images - use upload_image first for Reddit-hosted images), "self" for text posts',
         },
         text: {
           type: 'string',
@@ -319,7 +381,7 @@ export const postingTools: MCPToolDefinition[] = [
         },
         url: {
           type: 'string',
-          description: 'URL for link or image posts (required if kind is "link" or "image"). For images, use upload_image first to get an Imgur URL.',
+          description: 'URL for link posts (required if kind is "link"). For images, use upload_image first to get a Reddit-hosted URL (i.redd.it) - Reddit-hosted images will display inline automatically.',
         },
         sendreplies: {
           type: 'boolean',
@@ -404,6 +466,27 @@ export const postingTools: MCPToolDefinition[] = [
       required: ['thing_id'],
     },
     handler: deletePostOrComment,
+  },
+  {
+    name: 'vote',
+    description:
+      'Vote on a post or comment (upvote, downvote, or remove vote). Requires user authentication (REDDIT_USERNAME and REDDIT_PASSWORD). The thing_id should be a fullname (t3_xxxxx for posts, t1_xxxxx for comments), but can also be a short ID (will be treated as a post). Note: Reddit requires votes to be cast by humans, not automated bots.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        thing_id: {
+          type: 'string',
+          description: 'Post ID (t3_xxxxx) or comment ID (t1_xxxxx) to vote on. Can also be a short ID (will be treated as a post).',
+        },
+        direction: {
+          type: 'string',
+          enum: ['upvote', 'downvote', 'remove'],
+          description: 'Vote direction: "upvote" to upvote, "downvote" to downvote, "remove" to remove an existing vote',
+        },
+      },
+      required: ['thing_id', 'direction'],
+    },
+    handler: vote,
   },
 ];
 

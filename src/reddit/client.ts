@@ -4,6 +4,7 @@
  */
 
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import FormData from 'form-data';
 
 export interface RedditConfig {
   clientId: string;
@@ -144,6 +145,52 @@ export class RedditClient {
       }
       return config;
     });
+
+    // Add response interceptor for rate limit handling and monitoring
+    this.axiosInstance.interceptors.response.use(
+      (response) => {
+        // Log rate limit headers for monitoring
+        const rateLimitUsed = response.headers['x-ratelimit-used'];
+        const rateLimitRemaining = response.headers['x-ratelimit-remaining'];
+        const rateLimitReset = response.headers['x-ratelimit-reset'];
+
+        if (rateLimitRemaining !== undefined) {
+          const remaining = parseInt(rateLimitRemaining, 10);
+          if (remaining < 20) {
+            console.error(`⚠️ Rate limit warning: ${remaining} requests remaining (reset in ${rateLimitReset || 'unknown'} seconds)`);
+          }
+        }
+
+        return response;
+      },
+      async (error) => {
+        const originalRequest = error.config;
+
+        // Handle 429 Too Many Requests
+        if (error.response?.status === 429 && !originalRequest._retry) {
+          originalRequest._retry = true;
+
+          // Get retry-after header or default to 60 seconds
+          const retryAfter = error.response.headers['retry-after']
+            ? parseInt(error.response.headers['retry-after'], 10) * 1000
+            : 60000; // Default to 60 seconds
+
+          const rateLimitReset = error.response.headers['x-ratelimit-reset'] || 'unknown';
+          
+          console.error(`⏳ Rate limit exceeded (429). Waiting ${retryAfter / 1000} seconds before retry...`);
+          console.error(`   Rate limit resets in: ${rateLimitReset} seconds`);
+          console.error(`   Reddit allows 100 requests per minute per OAuth client ID`);
+
+          // Wait before retrying
+          await new Promise((resolve) => setTimeout(resolve, retryAfter));
+
+          // Retry the request
+          return this.axiosInstance(originalRequest);
+        }
+
+        return Promise.reject(error);
+      }
+    );
   }
 
   /**
@@ -278,6 +325,23 @@ export class RedditClient {
       const response = await this.axiosInstance.post<T>(endpoint, data, config);
       return response.data;
     } catch (error: any) {
+      // Handle rate limit errors with better messaging
+      if (error.response?.status === 429) {
+        const retryAfter = error.response.headers['retry-after'] || '60';
+        throw new Error(
+          `Rate limit exceeded. Reddit allows 100 requests per minute. Please wait ${retryAfter} seconds before retrying.`
+        );
+      }
+
+      // Handle Reddit API error format
+      if (error.response?.data?.errors) {
+        const errors = error.response.data.errors;
+        const errorMessages = errors.map((e: any) => 
+          `${e.code || 'Error'}: ${e.detail || e.message || JSON.stringify(e)}`
+        ).join('; ');
+        throw new Error(`Reddit API errors: ${errorMessages}`);
+      }
+
       throw new Error(
         `Reddit API error: ${error.response?.data?.message || error.message}`
       );
@@ -486,7 +550,7 @@ export class RedditClient {
   async submitPost(params: {
     subreddit: string;
     title: string;
-    kind: 'link' | 'self' | 'image';
+    kind: 'link' | 'self';
     text?: string;
     url?: string;
     sendreplies?: boolean;
@@ -507,9 +571,9 @@ export class RedditClient {
 
     if (params.kind === 'link' && params.url) {
       formData.append('url', params.url);
-    } else if (params.kind === 'image' && params.url) {
-      // For image posts, url should be a Reddit-hosted image URL
-      formData.append('url', params.url);
+      // Note: For images, upload to Reddit first using uploadImageToReddit(),
+      // then use the returned i.redd.it URL here with kind="link"
+      // Reddit-hosted images (i.redd.it) will display inline automatically
     } else if (params.kind === 'self' && params.text) {
       formData.append('text', params.text);
     }
@@ -539,45 +603,169 @@ export class RedditClient {
   }
 
   /**
-   * Upload an image to Imgur and return the URL
-   * Imgur allows anonymous uploads without API key for basic usage
+   * Upload an image to Reddit's native servers (i.redd.it)
+   * This allows images to display inline in posts
+   * Requires user authentication
    */
-  async uploadImageToImgur(imageUrl: string): Promise<string> {
+  async uploadImageToReddit(imageBuffer: Buffer, filename: string, mimeType: string = 'image/png'): Promise<string> {
+    if (!this.config.username || !this.config.password) {
+      throw new Error('User authentication required for uploading images to Reddit. Please provide REDDIT_USERNAME and REDDIT_PASSWORD.');
+    }
+
     try {
-      // First, fetch the image if it's a URL
-      const imageResponse = await axios.get(imageUrl, {
-        responseType: 'arraybuffer',
-        maxContentLength: 20 * 1024 * 1024, // 20MB limit
-      });
+      await this.ensureAuthenticated();
 
-      const imageBuffer = Buffer.from(imageResponse.data);
-      const base64Image = imageBuffer.toString('base64');
+      // Step 1: Get upload lease from Reddit
+      // The media upload endpoint is on oauth.reddit.com
+      const formData = new URLSearchParams();
+      formData.append('filepath', filename);
+      formData.append('mimetype', mimeType);
 
-      // Upload to Imgur (anonymous API)
-      const uploadResponse = await axios.post(
-        'https://api.imgur.com/3/image',
-        {
-          image: base64Image,
-          type: 'base64',
-        },
+      console.error('Requesting upload lease from Reddit...');
+      const leaseUrl = 'https://oauth.reddit.com/api/media/asset';
+      console.error('Lease URL:', leaseUrl);
+      console.error('Form data:', formData.toString());
+      
+      const leaseResponse = await axios.post(
+        leaseUrl,
+        formData.toString(),
         {
           headers: {
-            'Authorization': 'Client-ID 546c25a59c58ad7', // Imgur's public anonymous client ID
-            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.config.accessToken}`,
+            'User-Agent': this.config.userAgent,
+            'Content-Type': 'application/x-www-form-urlencoded',
           },
+          validateStatus: () => true, // Don't throw on any status
         }
       );
 
-      if (uploadResponse.data.success && uploadResponse.data.data?.link) {
-        return uploadResponse.data.data.link;
-      } else {
-        throw new Error(`Imgur upload failed: ${uploadResponse.data.data?.error || 'Unknown error'}`);
+      console.error('Lease response status:', leaseResponse.status);
+      console.error('Lease response data:', JSON.stringify(leaseResponse.data, null, 2));
+
+      // Check for errors in response
+      if (leaseResponse.status !== 200) {
+        throw new Error(`Reddit API returned status ${leaseResponse.status}: ${JSON.stringify(leaseResponse.data)}`);
       }
+
+      const leaseData = leaseResponse.data;
+      if (!leaseData.args || !leaseData.asset) {
+        throw new Error(`Invalid lease response: ${JSON.stringify(leaseData)}`);
+      }
+
+      const { action, fields } = leaseData.args;
+      const assetId = leaseData.asset.asset_id;
+      
+      console.error('Upload action URL:', action);
+      console.error('Asset ID:', assetId);
+      
+      if (!action || typeof action !== 'string') {
+        throw new Error(`Invalid action URL in lease response: ${action}`);
+      }
+
+      // Fix protocol-relative URL (starts with //) by prepending https:
+      const uploadUrl = action.startsWith('//') ? `https:${action}` : action;
+      console.error('Fixed upload URL:', uploadUrl);
+
+      // Step 2: Upload image to S3 using the lease
+      const form = new FormData();
+      
+      // Add all fields from the lease
+      for (const field of fields) {
+        form.append(field.name, field.value);
+      }
+      
+      // Add the file
+      form.append('file', imageBuffer, {
+        filename,
+        contentType: mimeType,
+      });
+
+      // Upload to S3
+      const uploadResponse = await axios.post(uploadUrl, form, {
+        headers: {
+          ...form.getHeaders(),
+        },
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+        validateStatus: () => true, // Accept any status
+      });
+
+      console.error('S3 upload response status:', uploadResponse.status);
+      console.error('S3 upload response:', uploadResponse.status === 201 ? 'Success' : JSON.stringify(uploadResponse.data));
+
+      if (uploadResponse.status !== 201) {
+        throw new Error(`S3 upload failed with status ${uploadResponse.status}: ${JSON.stringify(uploadResponse.data)}`);
+      }
+
+      // Step 3: Poll for image processing completion
+      // Reddit needs time to process the uploaded image
+      const websocketUrl = leaseData.asset.websocket_url;
+      console.error('Waiting for image processing...');
+      console.error('Websocket URL:', websocketUrl);
+      
+      // Poll the asset status endpoint to check if processing is complete
+      let processingComplete = false;
+      let attempts = 0;
+      const maxAttempts = 30; // Wait up to 30 seconds
+      
+      while (!processingComplete && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between checks
+        
+        try {
+          const statusResponse = await axios.get(
+            `https://oauth.reddit.com/api/media/asset.json?asset_id=${assetId}`,
+            {
+              headers: {
+                'Authorization': `Bearer ${this.config.accessToken}`,
+                'User-Agent': this.config.userAgent,
+              },
+              validateStatus: () => true,
+            }
+          );
+          
+          if (statusResponse.status === 200 && statusResponse.data?.asset) {
+            const processingState = statusResponse.data.asset.processing_state;
+            console.error(`Processing state (attempt ${attempts + 1}):`, processingState);
+            
+            if (processingState === 'complete' || processingState === 'ready') {
+              processingComplete = true;
+            }
+          }
+        } catch (error) {
+          // Continue polling even if status check fails
+          console.error('Status check error:', error.message);
+        }
+        
+        attempts++;
+      }
+
+      if (!processingComplete) {
+        console.error('Warning: Image processing may not be complete, but proceeding anyway');
+      }
+
+      // Return the Reddit-hosted URL
+      const redditImageUrl = `https://i.redd.it/${assetId}`;
+      console.error('Reddit image URL:', redditImageUrl);
+      return redditImageUrl;
     } catch (error: any) {
-      if (error.response?.data?.data?.error) {
-        throw new Error(`Imgur upload failed: ${error.response.data.data.error}`);
+      let errorMessage = error.message;
+      
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+        errorMessage = `Reddit API error (${status}): ${JSON.stringify(data)}`;
+        console.error('Reddit API response:', JSON.stringify(data, null, 2));
+      } else if (error.request) {
+        errorMessage = `Request failed: ${error.message}`;
+        console.error('Request error:', error.message);
+        console.error('Request URL:', error.config?.url);
+      } else {
+        errorMessage = `Error: ${error.message}`;
+        console.error('Error:', error.message);
+        console.error('Stack:', error.stack);
       }
-      throw new Error(`Failed to upload image to Imgur: ${error.message}`);
+      
+      throw new Error(`Failed to upload image to Reddit: ${errorMessage}`);
     }
   }
 
@@ -644,6 +832,36 @@ export class RedditClient {
     formData.append('id', thingId);
 
     const endpoint = '/api/del';
+    return this.post<any>(endpoint, formData.toString(), {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    });
+  }
+
+  /**
+   * Vote on a post or comment
+   * Requires user authentication (username/password)
+   * @param thingId - Fullname (e.g., t3_xxxxx for post, t1_xxxxx for comment)
+   * @param direction - 1 for upvote, -1 for downvote, 0 to remove vote
+   */
+  async vote(thingId: string, direction: 1 | -1 | 0): Promise<any> {
+    if (!this.config.username || !this.config.password) {
+      throw new Error('User authentication required for voting. Please provide REDDIT_USERNAME and REDDIT_PASSWORD.');
+    }
+
+    // Ensure thing_id has the correct prefix
+    let fullname = thingId;
+    if (!fullname.startsWith('t3_') && !fullname.startsWith('t1_')) {
+      // Try to infer: if it's a short ID, assume it's a post (t3_)
+      fullname = `t3_${fullname}`;
+    }
+
+    const formData = new URLSearchParams();
+    formData.append('id', fullname);
+    formData.append('dir', direction.toString());
+
+    const endpoint = '/api/vote';
     return this.post<any>(endpoint, formData.toString(), {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',

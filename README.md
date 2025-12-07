@@ -115,8 +115,8 @@ The Reddit MCP server provides 12 powerful tools for Reddit interaction:
 - **`get_post_comments`** - Get comments for a post with sorting options
 
 ### Posting Tools (Requires User Authentication)
-- **`upload_image`** - Upload an image to Imgur and get a URL for posting to Reddit
-- **`submit_post`** - Submit a new post to a subreddit (link, self/text, or image post)
+- **`upload_image`** - Upload an image to Reddit's native servers (i.redd.it) for inline display in posts
+- **`submit_post`** - Submit a new post to a subreddit (link or self/text post). For images, upload first then use kind="link"
 - **`submit_comment`** - Submit a comment or reply to a post or comment
 - **`edit_post_or_comment`** - Edit the text content of a post or comment
 - **`delete_post_or_comment`** - Delete a post or comment
@@ -169,15 +169,19 @@ The Reddit MCP server provides 12 powerful tools for Reddit interaction:
 ```
 
 ### Image Posts
-To post images to Reddit:
-1. First, upload the image using `upload_image` with an image URL or base64 data
-2. Then use the returned Imgur URL in `submit_post` with `kind: "image"` or `kind: "link"`
+To post images to Reddit with inline display:
+1. First, upload the image using `upload_image` with an image URL or local file path
+2. Then use the returned Reddit-hosted URL (i.redd.it) in `submit_post` with `kind: "link"`
+
+**Important:** Reddit's API does NOT support `kind="image"`. Use `kind="link"` with Reddit-hosted image URLs (i.redd.it) - they will display inline automatically.
 
 Example workflow:
 ```
 1. "Upload image from https://example.com/screenshot.png"
-2. "Post the uploaded image to r/programming with title 'My Project Screenshot' and kind 'image'"
+2. "Post the uploaded image to r/programming with title 'My Project Screenshot' and kind 'link'"
 ```
+
+**Note:** Image uploads require user authentication (REDDIT_USERNAME and REDDIT_PASSWORD). Images are uploaded to Reddit's native servers (i.redd.it) and will display inline when used with `kind="link"`.
 
 ## 🔧 Configuration
 
