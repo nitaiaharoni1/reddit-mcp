@@ -8,6 +8,14 @@ import { MCPToolDefinition, MCPResult } from '../types/mcp';
 import { formatErrorResult, formatTextResult } from '../utils/result-formatter';
 
 /**
+ * Replace em dashes (—) with regular hyphens (-) deterministically
+ * This ensures consistent formatting for Reddit API compatibility
+ */
+const normalizeDashes = (text: string): string => {
+  return text.replace(/—/g, '-');
+};
+
+/**
  * Submit a new post to a subreddit
  */
 const submitPost = async (args: {
@@ -42,17 +50,22 @@ const submitPost = async (args: {
 
     console.error(`📝 Submitting ${args.kind} post to r/${subreddit}...`);
 
+    // Normalize dashes in all text fields
+    const normalizedTitle = normalizeDashes(args.title);
+    const normalizedText = args.text ? normalizeDashes(args.text) : undefined;
+    const normalizedFlairText = args.flair_text ? normalizeDashes(args.flair_text) : undefined;
+
     const response = await client.submitPost({
       subreddit,
-      title: args.title,
+      title: normalizedTitle,
       kind: args.kind,
-      text: args.text,
+      text: normalizedText,
       url: args.url,
       sendreplies: args.sendreplies ?? true,
       nsfw: args.nsfw ?? false,
       spoiler: args.spoiler ?? false,
       flairId: args.flair_id,
-      flairText: args.flair_text,
+      flairText: normalizedFlairText,
     });
 
     // Reddit API returns { json: { data: { name: "t3_xxxxx", url: "...", ... }, errors: [] } }
@@ -70,7 +83,7 @@ const submitPost = async (args: {
       post_id_short: postData.name.replace(/^t3_/, ''),
       url: postData.url,
       permalink: `https://reddit.com${postData.url}`,
-      title: args.title,
+      title: normalizedTitle,
       subreddit: subreddit,
     };
 
@@ -106,9 +119,12 @@ const submitComment = async (args: {
 
     console.error(`💬 Submitting comment to ${parentId}...`);
 
+    // Normalize dashes in comment text
+    const normalizedText = normalizeDashes(args.text);
+
     const response = await client.submitComment({
       parentId: parentId,
-      text: args.text,
+      text: normalizedText,
     });
 
     const jsonData = response.json;
@@ -124,7 +140,7 @@ const submitComment = async (args: {
       comment_id: commentData?.name,
       comment_id_short: commentData?.name?.replace(/^t1_/, ''),
       permalink: commentData?.permalink ? `https://reddit.com${commentData.permalink}` : null,
-      text: args.text,
+      text: normalizedText,
     };
 
     console.error(`✅ Comment submitted successfully: ${commentData?.name}`);
@@ -158,9 +174,12 @@ const editPostOrComment = async (args: {
 
     console.error(`✏️ Editing ${thingId}...`);
 
+    // Normalize dashes in edit text
+    const normalizedText = normalizeDashes(args.text);
+
     const response = await client.editPostOrComment({
       thingId: thingId,
-      text: args.text,
+      text: normalizedText,
     });
 
     const jsonData = response.json;
@@ -172,7 +191,7 @@ const editPostOrComment = async (args: {
     const result = {
       success: true,
       thing_id: thingId,
-      text: args.text,
+      text: normalizedText,
     };
 
     console.error(`✅ Successfully edited ${thingId}`);
