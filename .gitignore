@@ -166,8 +166,8 @@ junit.xml
 *.spec.js.map
 
 # Test files with secrets (use environment variables instead)
-test-reddit.ts
-test-mcp-server.ts
+scripts/test-reddit.ts
+scripts/test-mcp-server.ts
 
 # Files that may contain secrets
 *.local.*

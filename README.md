@@ -64,20 +64,7 @@ Restart Claude Desktop after setup.
    - Choose "script" as the app type
    - Note your Client ID and Client Secret
 
-2. **Set Environment Variables:**
-   ```bash
-   export REDDIT_CLIENT_ID="your_client_id"
-   export REDDIT_CLIENT_SECRET="your_client_secret"
-   export REDDIT_USER_AGENT="mcp-reddit:1.0.0 (by /u/yourusername)"
-   ```
-
-   Optional (for user-specific features):
-   ```bash
-   export REDDIT_USERNAME="your_username"
-   export REDDIT_PASSWORD="your_password"
-   ```
-
-3. **Configure Claude Desktop:**
+2. **Configure Claude Desktop:**
    Add to your Claude Desktop config file:
    ```json
    {
@@ -88,12 +75,16 @@ Restart Claude Desktop after setup.
          "env": {
            "REDDIT_CLIENT_ID": "your_client_id",
            "REDDIT_CLIENT_SECRET": "your_client_secret",
-           "REDDIT_USER_AGENT": "mcp-reddit:1.0.0 (by /u/yourusername)"
+           "REDDIT_USER_AGENT": "mcp-reddit:1.0.0 (by /u/yourusername)",
+           "REDDIT_USERNAME": "your_username",
+           "REDDIT_PASSWORD": "your_password"
          }
        }
      }
    }
    ```
+   
+   **Note:** All five environment variables (`REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_USER_AGENT`, `REDDIT_USERNAME`, and `REDDIT_PASSWORD`) are required for the server to function properly.
 
    Config file locations:
    - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
@@ -159,7 +150,7 @@ The Reddit MCP server provides 12 powerful tools for Reddit interaction:
 "Find the top posts about 'machine learning' from this week"
 ```
 
-### Posting and Interaction (Requires REDDIT_USERNAME and REDDIT_PASSWORD)
+### Posting and Interaction
 ```
 "Submit a post to r/programming with title 'My New Project' and text 'Check out this cool thing I built'"
 "Upload an image from https://example.com/image.png and then post it to r/pics with title 'My Photo'"
@@ -181,17 +172,19 @@ Example workflow:
 2. "Post the uploaded image to r/programming with title 'My Project Screenshot' and kind 'link'"
 ```
 
-**Note:** Image uploads require user authentication (REDDIT_USERNAME and REDDIT_PASSWORD). Images are uploaded to Reddit's native servers (i.redd.it) and will display inline when used with `kind="link"`.
+**Note:** Images are uploaded to Reddit's native servers (i.redd.it) and will display inline when used with `kind="link"`.
 
 ## 🔧 Configuration
 
 ### Environment Variables
 
+**All of the following environment variables are required:**
+
 - **`REDDIT_CLIENT_ID`** - Your Reddit app Client ID (required)
 - **`REDDIT_CLIENT_SECRET`** - Your Reddit app Client Secret (required)
 - **`REDDIT_USER_AGENT`** - User-Agent string (required, format: `app:client_id:version (by /u/username)`)
-- **`REDDIT_USERNAME`** - Your Reddit username (optional, for user-specific features)
-- **`REDDIT_PASSWORD`** - Your Reddit password (optional, for user-specific features)
+- **`REDDIT_USERNAME`** - Your Reddit username (required)
+- **`REDDIT_PASSWORD`** - Your Reddit password (required)
 
 ### User-Agent Format
 
@@ -237,16 +230,20 @@ You can test the Reddit API client directly using the test scripts (not committe
 REDDIT_CLIENT_ID="your_client_id" \
 REDDIT_CLIENT_SECRET="your_client_secret" \
 REDDIT_USER_AGENT="mcp-reddit:1.0.0 (by /u/yourusername)" \
-npx ts-node test-reddit.ts
+REDDIT_USERNAME="your_username" \
+REDDIT_PASSWORD="your_password" \
+npx ts-node scripts/test-reddit.ts
 
 # Test MCP Server Tools
 REDDIT_CLIENT_ID="your_client_id" \
 REDDIT_CLIENT_SECRET="your_client_secret" \
 REDDIT_USER_AGENT="mcp-reddit:1.0.0 (by /u/yourusername)" \
-npx ts-node test-mcp-server.ts
+REDDIT_USERNAME="your_username" \
+REDDIT_PASSWORD="your_password" \
+npx ts-node scripts/test-mcp-server.ts
 ```
 
-**Note**: Test files (`test-reddit.ts`, `test-mcp-server.ts`) are in `.gitignore` and use environment variables for credentials.
+**Note**: Test files (`scripts/test-reddit.ts`, `scripts/test-mcp-server.ts`) are in `.gitignore` and use environment variables for credentials.
 
 ## 🏗️ Development
 
@@ -349,13 +346,17 @@ npx ts-node test-mcp-server.ts
 
 ### Environment Variables
 
-Always set credentials via environment variables:
+For Claude Desktop, set credentials in the config file (see Quick Setup above). For command-line usage or testing, you can set them as environment variables:
 
 ```bash
 export REDDIT_CLIENT_ID="your_client_id"
 export REDDIT_CLIENT_SECRET="your_client_secret"
 export REDDIT_USER_AGENT="mcp-reddit:1.0.0 (by /u/yourusername)"
+export REDDIT_USERNAME="your_username"
+export REDDIT_PASSWORD="your_password"
 ```
+
+**Important:** All five environment variables are required for the server to function properly.
 
 ### Credential Rotation
 
