@@ -147,7 +147,7 @@ const searchSubreddits = async (args: {
 // Tool definitions
 export const discoveryTools: MCPToolDefinition[] = [
   {
-    name: 'get_popular_subreddits',
+    name: 'reddit_get_popular_subreddits',
     description:
       'Discover the most popular and active subreddits on Reddit. Returns a list of subreddits sorted by popularity and activity, including subscriber counts, descriptions, and metadata. Perfect for finding trending communities and exploring what\'s popular on Reddit.',
     inputSchema: {
@@ -168,7 +168,7 @@ export const discoveryTools: MCPToolDefinition[] = [
     handler: getPopularSubreddits,
   },
   {
-    name: 'get_new_subreddits',
+    name: 'reddit_get_new_subreddits',
     description:
       'Find newly created subreddits on Reddit. Returns recently established communities sorted by creation date. Useful for discovering fresh communities and getting in early on new subreddits.',
     inputSchema: {
@@ -189,7 +189,7 @@ export const discoveryTools: MCPToolDefinition[] = [
     handler: getNewSubreddits,
   },
   {
-    name: 'search_subreddits',
+    name: 'reddit_search_subreddits',
     description:
       'Search for subreddits by name or description. Finds communities matching your search query, including their subscriber counts, descriptions, and metadata. Essential for discovering subreddits when you know what topic you\'re interested in but not the exact subreddit name.',
     inputSchema: {

@@ -109,7 +109,7 @@ const getSubredditInfo = async (args: { subreddit: string }) => {
 // Tool definitions
 export const subredditTools: MCPToolDefinition[] = [
   {
-    name: 'get_subreddit_posts',
+    name: 'reddit_get_subreddit_posts',
     description:
       'Retrieve posts from a specific subreddit with flexible sorting options. Supports hot (trending), new (recent), top (highest scored), rising (gaining traction), and controversial (divisive) sorting. Includes pagination support for browsing through multiple pages of results. Perfect for exploring subreddit content or monitoring specific communities.',
     inputSchema: {
@@ -145,7 +145,7 @@ export const subredditTools: MCPToolDefinition[] = [
     handler: getSubredditPosts,
   },
   {
-    name: 'get_subreddit_info',
+    name: 'reddit_get_subreddit_info',
     description: 'Fetch comprehensive information about a subreddit including its description, subscriber count, creation date, content policies, and community metadata. Useful for understanding a subreddit\'s purpose, size, and characteristics before exploring its content.',
     inputSchema: {
       type: 'object',

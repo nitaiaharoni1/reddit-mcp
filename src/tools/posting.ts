@@ -271,7 +271,7 @@ const vote = async (args: {
 // Tool definitions
 export const postingTools: MCPToolDefinition[] = [
   {
-    name: 'upload_image',
+    name: 'reddit_upload_image',
     description:
       'Upload an image to Reddit\'s native servers (i.redd.it) for inline display in posts. Accepts image URLs (will download) or local file paths. Returns a Reddit-hosted URL (i.redd.it) that can be used in submit_post with kind="image". Requires user authentication (REDDIT_USERNAME and REDDIT_PASSWORD).',
     inputSchema: {
@@ -356,7 +356,7 @@ export const postingTools: MCPToolDefinition[] = [
     },
   },
   {
-    name: 'submit_post',
+    name: 'reddit_submit_post',
     description:
       'Submit a new post to a subreddit. Supports link posts (with URL) and self/text posts (with text content). For image posts, use upload_image first to get a Reddit-hosted URL (i.redd.it), then use that URL here with kind="link" - Reddit-hosted images will display inline automatically. Requires user authentication (REDDIT_USERNAME and REDDIT_PASSWORD). Can optionally mark posts as NSFW, spoiler, set flair, and control reply notifications.',
     inputSchema: {
@@ -412,7 +412,7 @@ export const postingTools: MCPToolDefinition[] = [
     handler: submitPost,
   },
   {
-    name: 'submit_comment',
+    name: 'reddit_submit_comment',
     description:
       'Submit a comment or reply to a post or comment. Requires user authentication (REDDIT_USERNAME and REDDIT_PASSWORD). The parent_id should be a post ID (t3_xxxxx) for top-level comments or a comment ID (t1_xxxxx) for replies.',
     inputSchema: {
@@ -432,7 +432,7 @@ export const postingTools: MCPToolDefinition[] = [
     handler: submitComment,
   },
   {
-    name: 'edit_post_or_comment',
+    name: 'reddit_edit_post_or_comment',
     description:
       'Edit the text content of a post or comment. Requires user authentication (REDDIT_USERNAME and REDDIT_PASSWORD). Can only edit your own posts/comments. The thing_id must be a fullname (t3_xxxxx for posts, t1_xxxxx for comments).',
     inputSchema: {
@@ -452,7 +452,7 @@ export const postingTools: MCPToolDefinition[] = [
     handler: editPostOrComment,
   },
   {
-    name: 'delete_post_or_comment',
+    name: 'reddit_delete_post_or_comment',
     description:
       'Delete a post or comment. Requires user authentication (REDDIT_USERNAME and REDDIT_PASSWORD). Can only delete your own posts/comments. The thing_id must be a fullname (t3_xxxxx for posts, t1_xxxxx for comments).',
     inputSchema: {
@@ -468,7 +468,7 @@ export const postingTools: MCPToolDefinition[] = [
     handler: deletePostOrComment,
   },
   {
-    name: 'vote',
+    name: 'reddit_vote',
     description:
       'Vote on a post or comment (upvote, downvote, or remove vote). Requires user authentication (REDDIT_USERNAME and REDDIT_PASSWORD). The thing_id should be a fullname (t3_xxxxx for posts, t1_xxxxx for comments), but can also be a short ID (will be treated as a post). Note: Reddit requires votes to be cast by humans, not automated bots.',
     inputSchema: {

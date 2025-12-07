@@ -73,7 +73,7 @@ const searchReddit = async (args: {
 // Tool definitions
 export const searchTools: MCPToolDefinition[] = [
   {
-    name: 'search_reddit',
+    name: 'reddit_search_reddit',
     description:
       'Search Reddit for posts matching a query string. Can search across all of Reddit or limit results to a specific subreddit. Supports multiple sorting options (relevance, hot, top, new, comments) and time-based filtering. Includes pagination for browsing through large result sets. Essential for finding specific content, discussions, or information on Reddit.',
     inputSchema: {

@@ -121,7 +121,7 @@ const getPost = async (args: {
 // Tool definitions
 export const postTools: MCPToolDefinition[] = [
   {
-    name: 'get_post_comments',
+    name: 'reddit_get_post_comments',
     description:
       'Retrieve all comments for a specific Reddit post along with the post details. Supports multiple comment sorting methods including confidence (best), top (highest scored), new (recent), controversial (divisive), old (chronological), random, qa (Q&A format), and live (real-time). Returns the full comment thread structure with nested replies. Essential for reading discussions and understanding community responses to posts.',
     inputSchema: {
@@ -152,7 +152,7 @@ export const postTools: MCPToolDefinition[] = [
     handler: getPostComments,
   },
   {
-    name: 'get_post',
+    name: 'reddit_get_post',
     description: 'Fetch detailed information about a specific Reddit post by its ID, including title, content, author, scores, comment count, timestamps, and metadata. Useful for retrieving complete post details when you have the post ID.',
     inputSchema: {
       type: 'object',

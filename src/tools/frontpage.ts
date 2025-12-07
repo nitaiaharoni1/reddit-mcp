@@ -65,7 +65,7 @@ const getFrontPagePosts = async (args: {
 // Tool definitions
 export const frontPageTools: MCPToolDefinition[] = [
   {
-    name: 'get_front_page_posts',
+    name: 'reddit_get_front_page_posts',
     description:
       'Retrieve posts from Reddit\'s front page (home feed) with multiple sorting options. The front page shows the best content from all your subscribed subreddits (or popular subreddits if not logged in). Supports best (curated), hot (trending), new (recent), top (highest scored), rising (gaining traction), and controversial (divisive) sorting. Essential for browsing Reddit\'s main feed.',
     inputSchema: {

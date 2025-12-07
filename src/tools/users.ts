@@ -243,7 +243,7 @@ const getUserOverview = async (args: {
 // Tool definitions
 export const userTools: MCPToolDefinition[] = [
   {
-    name: 'get_user_info',
+    name: 'reddit_get_user_info',
     description: 'Retrieve comprehensive profile information about a Reddit user including their karma scores (link and comment karma), account creation date, verification status, moderator status, and profile metadata. Useful for understanding a user\'s reputation and activity level on Reddit.',
     inputSchema: {
       type: 'object',
@@ -258,7 +258,7 @@ export const userTools: MCPToolDefinition[] = [
     handler: getUserInfo,
   },
   {
-    name: 'get_user_posts',
+    name: 'reddit_get_user_posts',
     description: 'Fetch all posts submitted by a specific Reddit user across all subreddits. Supports multiple sorting options (hot, new, top, controversial) and time-based filtering. Includes pagination for browsing through a user\'s entire post history. Perfect for analyzing a user\'s contributions or finding their best content. Use "me" as username to get posts from the current authenticated user.',
     inputSchema: {
       type: 'object',
@@ -293,7 +293,7 @@ export const userTools: MCPToolDefinition[] = [
     handler: getUserPosts,
   },
   {
-    name: 'get_user_comments',
+    name: 'reddit_get_user_comments',
     description: 'Retrieve all comments made by a specific Reddit user across all subreddits. Supports multiple sorting options and time-based filtering. Includes pagination for browsing through a user\'s entire comment history. Useful for understanding a user\'s discussion participation and finding their most engaging comments.',
     inputSchema: {
       type: 'object',
@@ -328,7 +328,7 @@ export const userTools: MCPToolDefinition[] = [
     handler: getUserComments,
   },
   {
-    name: 'get_user_overview',
+    name: 'reddit_get_user_overview',
     description: 'Get a combined feed of a user\'s posts and comments together, sorted chronologically or by score. This provides a unified view of all user activity across Reddit. Perfect for getting a complete picture of a user\'s contributions in a single request.',
     inputSchema: {
       type: 'object',
