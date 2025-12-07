@@ -733,7 +733,7 @@ export class RedditClient {
           }
         } catch (error) {
           // Continue polling even if status check fails
-          console.error('Status check error:', error.message);
+          console.error('Status check error:', error instanceof Error ? error.message : String(error));
         }
         
         attempts++;
