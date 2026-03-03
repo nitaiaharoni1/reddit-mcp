@@ -20,8 +20,8 @@ export function initializeReddit(config?: Partial<RedditConfig>): RedditClient {
   const clientSecret = config?.clientSecret || process.env.REDDIT_CLIENT_SECRET;
   const username = config?.username || process.env.REDDIT_USERNAME;
   const password = config?.password || process.env.REDDIT_PASSWORD;
-  const userAgent = config?.userAgent || process.env.REDDIT_USER_AGENT || 
-    `reddit-mcp:1.0.0 (by /u/${username || 'reddit-mcp'})`;
+  const userAgent = config?.userAgent || process.env.REDDIT_USER_AGENT ||
+    `script:mcp-reddit:v1.1.7 (by /u/${username || 'reddit-mcp'})`;
 
   if (!clientId || !clientSecret) {
     throw new Error(

@@ -3,8 +3,26 @@
  * Handles OAuth authentication and API requests to Reddit
  */
 
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
 import FormData from 'form-data';
+import { RequestThrottler } from './request-throttler';
+
+// Allow tracking retry count on request configs
+declare module 'axios' {
+  interface InternalAxiosRequestConfig {
+    _retryCount?: number;
+  }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function computeBackoff(attempt: number): number {
+  const raw = Math.min(1000 * Math.pow(2, attempt), 60_000);
+  const jitter = raw * 0.2 * (Math.random() * 2 - 1);
+  return Math.round(raw + jitter);
+}
 
 export interface RedditConfig {
   clientId: string;
@@ -141,18 +159,21 @@ export class RedditClient {
   private config: RedditConfig;
   private axiosInstance: AxiosInstance;
   private tokenExpiry: number = 0;
+  private readonly throttler: RequestThrottler = new RequestThrottler();
 
   constructor(config: RedditConfig) {
     this.config = config;
     this.axiosInstance = axios.create({
       baseURL: 'https://oauth.reddit.com',
+      params: { raw_json: 1 },
       headers: {
         'User-Agent': config.userAgent,
       },
     });
 
-    // Add request interceptor for authentication
+    // Add request interceptor for throttling and authentication
     this.axiosInstance.interceptors.request.use(async (config) => {
+      await this.throttler.throttle();
       await this.ensureAuthenticated();
       if (this.config.accessToken) {
         config.headers.Authorization = `Bearer ${this.config.accessToken}`;
@@ -160,46 +181,51 @@ export class RedditClient {
       return config;
     });
 
-    // Add response interceptor for rate limit handling and monitoring
+    // Add response interceptor for rate limit tracking and retry with backoff
     this.axiosInstance.interceptors.response.use(
       (response) => {
-        // Log rate limit headers for monitoring
-        const rateLimitUsed = response.headers['x-ratelimit-used'];
-        const rateLimitRemaining = response.headers['x-ratelimit-remaining'];
-        const rateLimitReset = response.headers['x-ratelimit-reset'];
-
-        if (rateLimitRemaining !== undefined) {
-          const remaining = parseInt(rateLimitRemaining, 10);
-          if (remaining < 20) {
-            console.error(`⚠️ Rate limit warning: ${remaining} requests remaining (reset in ${rateLimitReset || 'unknown'} seconds)`);
-          }
-        }
-
+        this.throttler.updateFromHeaders(response.headers as Record<string, string>);
         return response;
       },
       async (error) => {
-        const originalRequest = error.config;
+        const req: InternalAxiosRequestConfig = error.config;
+        const status: number | undefined = error.response?.status;
+        const retryCount = req._retryCount ?? 0;
+        const MAX_RETRIES = 3;
 
-        // Handle 429 Too Many Requests
-        if (error.response?.status === 429 && !originalRequest._retry) {
-          originalRequest._retry = true;
+        const is403 = status === 403;
+        const is429 = status === 429;
+        const is5xx = status !== undefined && status >= 500;
 
-          // Get retry-after header or default to 60 seconds
-          const retryAfter = error.response.headers['retry-after']
-            ? parseInt(error.response.headers['retry-after'], 10) * 1000
-            : 60000; // Default to 60 seconds
+        // 403: token may be invalid/revoked — re-authenticate once and retry
+        if (is403 && retryCount < 1) {
+          req._retryCount = retryCount + 1;
+          console.error('⚠️  HTTP 403 — token may be invalid, re-authenticating...');
+          this.config.accessToken = undefined;
+          this.tokenExpiry = 0;
+          await sleep(1000);
+          return this.axiosInstance(req);
+        }
 
-          const rateLimitReset = error.response.headers['x-ratelimit-reset'] || 'unknown';
-          
-          console.error(`⏳ Rate limit exceeded (429). Waiting ${retryAfter / 1000} seconds before retry...`);
-          console.error(`   Rate limit resets in: ${rateLimitReset} seconds`);
-          console.error(`   Reddit allows 100 requests per minute per OAuth client ID`);
+        if ((is429 || is5xx) && retryCount < MAX_RETRIES) {
+          req._retryCount = retryCount + 1;
 
-          // Wait before retrying
-          await new Promise((resolve) => setTimeout(resolve, retryAfter));
+          let waitMs: number;
+          if (is429) {
+            const retryAfterHeader = error.response?.headers['retry-after'];
+            const retryAfterMs = retryAfterHeader
+              ? parseInt(retryAfterHeader, 10) * 1000
+              : 0;
+            waitMs = retryAfterMs > 0 ? retryAfterMs : computeBackoff(retryCount);
+          } else {
+            waitMs = computeBackoff(retryCount);
+          }
 
-          // Retry the request
-          return this.axiosInstance(originalRequest);
+          console.error(
+            `⏳ HTTP ${status} – attempt ${retryCount + 1}/${MAX_RETRIES}, waiting ${Math.round(waitMs / 1000)}s...`
+          );
+          await sleep(waitMs);
+          return this.axiosInstance(req);
         }
 
         return Promise.reject(error);
@@ -337,13 +363,29 @@ export class RedditClient {
   ): Promise<T> {
     try {
       const response = await this.axiosInstance.post<T>(endpoint, data, config);
+      const responseData = response.data as Record<string, unknown>;
+
+      // Check for Reddit body-level RATELIMIT errors (HTTP 200 but action denied)
+      // Format: { json: { errors: [["RATELIMIT", "you are doing that too much...", "ratelimit"]] } }
+      const jsonErrors = (responseData?.json as Record<string, unknown>)?.errors;
+      if (Array.isArray(jsonErrors) && jsonErrors.length > 0) {
+        const ratelimitError = jsonErrors.find(
+          (e: unknown) => Array.isArray(e) && e[0] === 'RATELIMIT'
+        );
+        if (ratelimitError && Array.isArray(ratelimitError)) {
+          throw new Error(
+            `Reddit action rate limit: ${ratelimitError[1]}. This is a per-user cooldown separate from the API rate limit.`
+          );
+        }
+      }
+
       return response.data;
     } catch (error: any) {
       // Handle rate limit errors with better messaging
       if (error.response?.status === 429) {
         const retryAfter = error.response.headers['retry-after'] || '60';
         throw new Error(
-          `Rate limit exceeded. Reddit allows 100 requests per minute. Please wait ${retryAfter} seconds before retrying.`
+          `Rate limit exceeded. Reddit allows 100 requests per minute (OAuth free tier). Please wait ${retryAfter} seconds before retrying.`
         );
       }
 
@@ -636,29 +678,22 @@ export class RedditClient {
     }
 
     try {
-      await this.ensureAuthenticated();
-
-      // Step 1: Get upload lease from Reddit
-      // The media upload endpoint is on oauth.reddit.com
+      // Step 1: Get upload lease from Reddit (routed through throttled instance)
       const formData = new URLSearchParams();
       formData.append('filepath', filename);
       formData.append('mimetype', mimeType);
 
       console.error('Requesting upload lease from Reddit...');
-      const leaseUrl = 'https://oauth.reddit.com/api/media/asset';
-      console.error('Lease URL:', leaseUrl);
       console.error('Form data:', formData.toString());
-      
-      const leaseResponse = await axios.post(
-        leaseUrl,
+
+      const leaseResponse = await this.axiosInstance.post(
+        '/api/media/asset',
         formData.toString(),
         {
           headers: {
-            'Authorization': `Bearer ${this.config.accessToken}`,
-            'User-Agent': this.config.userAgent,
             'Content-Type': 'application/x-www-form-urlencoded',
           },
-          validateStatus: () => true, // Don't throw on any status
+          validateStatus: () => true,
         }
       );
 
@@ -720,46 +755,40 @@ export class RedditClient {
         throw new Error(`S3 upload failed with status ${uploadResponse.status}: ${JSON.stringify(uploadResponse.data)}`);
       }
 
-      // Step 3: Poll for image processing completion
-      // Reddit needs time to process the uploaded image
+      // Step 3: Poll for image processing completion using exponential backoff
+      // Caps at 10 attempts (max ~23s total) to avoid burning API quota
       const websocketUrl = leaseData.asset.websocket_url;
       console.error('Waiting for image processing...');
       console.error('Websocket URL:', websocketUrl);
-      
-      // Poll the asset status endpoint to check if processing is complete
+
       let processingComplete = false;
-      let attempts = 0;
-      const maxAttempts = 30; // Wait up to 30 seconds
-      
-      while (!processingComplete && attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between checks
-        
+      const MAX_POLL_ATTEMPTS = 10;
+
+      for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
+        const pollDelay = Math.min(1000 * Math.pow(2, attempt), 8_000);
+        await sleep(pollDelay);
+
         try {
-          const statusResponse = await axios.get(
-            `https://oauth.reddit.com/api/media/asset.json?asset_id=${assetId}`,
+          const statusResponse = await this.axiosInstance.get(
+            `/api/media/asset.json`,
             {
-              headers: {
-                'Authorization': `Bearer ${this.config.accessToken}`,
-                'User-Agent': this.config.userAgent,
-              },
+              params: { asset_id: assetId },
               validateStatus: () => true,
             }
           );
-          
+
           if (statusResponse.status === 200 && statusResponse.data?.asset) {
-            const processingState = statusResponse.data.asset.processing_state;
-            console.error(`Processing state (attempt ${attempts + 1}):`, processingState);
-            
+            const processingState: string = statusResponse.data.asset.processing_state;
+            console.error(`Processing state (attempt ${attempt + 1}):`, processingState);
+
             if (processingState === 'complete' || processingState === 'ready') {
               processingComplete = true;
+              break;
             }
           }
-        } catch (error) {
-          // Continue polling even if status check fails
-          console.error('Status check error:', error instanceof Error ? error.message : String(error));
+        } catch (pollError) {
+          console.error('Status check error:', pollError instanceof Error ? pollError.message : String(pollError));
         }
-        
-        attempts++;
       }
 
       if (!processingComplete) {
