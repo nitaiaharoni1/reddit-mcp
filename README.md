@@ -1,410 +1,162 @@
-# Reddit MCP Server
+# reddit-cli
 
-[![GitHub stars](https://img.shields.io/github/stars/nitaiaharoni1/mcp-reddit?style=social)](https://github.com/nitaiaharoni1/mcp-reddit/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/nitaiaharoni1/mcp-reddit?style=social)](https://github.com/nitaiaharoni1/mcp-reddit/network/members)
+A command-line interface for the Reddit API. Browse subreddits, posts, comments, users, and search — or perform write operations — directly from your terminal.
 
-A Model Context Protocol (MCP) server that provides AI assistants with direct access to Reddit's API. This server enables natural language interactions with Reddit data including subreddits, posts, comments, users, and search functionality.
-
-## 🚀 Quick Install
-
-### NPX (Recommended - No Installation Required)
-```bash
-# Run directly with npx (no installation needed)
-npx mcp-reddit
-```
-
-### Global Installation
-```bash
-# Install globally for repeated use
-npm install -g mcp-reddit
-mcp-reddit
-```
-
-Restart Claude Desktop after setup.
-
-**✨ New:** Use with NPX - no installation required! Just run `npx mcp-reddit` directly.
-
-## ✨ Features
-
-### 🔍 **Reddit API Integration**
-- **Subreddit Access** - Browse posts from any subreddit
-- **Post Details** - Get full post information and metadata
-- **Comments** - Retrieve comments with sorting options
-- **User Profiles** - View user information, posts, and comments
-- **Search** - Search Reddit or specific subreddits
-
-### 🔐 **OAuth Authentication**
-- **Secure Access** - Uses Reddit's OAuth2 API
-- **Token Management** - Automatic token refresh
-- **User-Agent Compliance** - Follows Reddit's API requirements
-
-### 📊 **Comprehensive Reddit Tools**
-- **Subreddit Operations** - Get posts, subreddit info
-- **Post Operations** - Get post details and comments
-- **Search Operations** - Search across Reddit
-- **User Operations** - Get user info, posts, and comments
-
-### ⚡ **Developer Experience**
-- **Easy setup** - Simple environment variable configuration
-- **TypeScript** - Full type safety and excellent IDE support
-- **CLI tools** - Command-line utilities for configuration
-
-## 🛠️ Installation
-
-### Prerequisites
-- Node.js (v16 or higher)
-- Claude Desktop or any MCP-compatible AI client
-- Reddit API credentials (Client ID and Client Secret)
-
-### Quick Setup
-
-1. **Get Reddit API Credentials:**
-   - Go to https://www.reddit.com/prefs/apps
-   - Click "create another app..." or "create app"
-   - Choose "script" as the app type
-   - Note your Client ID and Client Secret
-
-2. **Configure Claude Desktop:**
-   Add to your Claude Desktop config file:
-   
-   **Option A: Using npx (with --quiet to suppress npm warnings)**
-   ```json
-   {
-     "mcpServers": {
-       "mcp-reddit": {
-         "command": "npx",
-         "args": ["--quiet", "mcp-reddit"],
-         "env": {
-           "REDDIT_CLIENT_ID": "your_client_id",
-           "REDDIT_CLIENT_SECRET": "your_client_secret",
-           "REDDIT_USER_AGENT": "mcp-reddit:1.0.0 (by /u/yourusername)",
-           "REDDIT_USERNAME": "your_username",
-           "REDDIT_PASSWORD": "your_password"
-         }
-       }
-     }
-   }
-   ```
-   
-   **Option B: Global installation (recommended for production)**
-   ```json
-   {
-     "mcpServers": {
-       "mcp-reddit": {
-         "command": "mcp-reddit",
-         "env": {
-           "REDDIT_CLIENT_ID": "your_client_id",
-           "REDDIT_CLIENT_SECRET": "your_client_secret",
-           "REDDIT_USER_AGENT": "mcp-reddit:1.0.0 (by /u/yourusername)",
-           "REDDIT_USERNAME": "your_username",
-           "REDDIT_PASSWORD": "your_password"
-         }
-       }
-     }
-   }
-   ```
-   
-   **Note:** 
-   - All five environment variables (`REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_USER_AGENT`, `REDDIT_USERNAME`, and `REDDIT_PASSWORD`) are required for the server to function properly.
-   - Using `--quiet` with npx suppresses npm warnings that can interfere with JSON-RPC communication. For production use, consider installing globally (`npm install -g mcp-reddit`) and using Option B.
-
-   Config file locations:
-   - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-   - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-   - **Linux**: `~/.config/Claude/claude_desktop_config.json`
-
-4. **Restart Claude Desktop** and you're ready!
-
-## 🎯 Available Tools
-
-The Reddit MCP server provides 12 powerful tools for Reddit interaction:
-
-### Subreddit Tools
-- **`get_subreddit_posts`** - Get posts from a subreddit with sorting options (hot, new, top, rising)
-- **`get_subreddit_info`** - Get subreddit information and metadata
-
-### Post Tools
-- **`get_post`** - Get detailed information about a specific post
-- **`get_post_comments`** - Get comments for a post with sorting options
-
-### Posting Tools (Requires User Authentication)
-- **`upload_image`** - Upload an image to Reddit's native servers (i.redd.it) for inline display in posts
-- **`submit_post`** - Submit a new post to a subreddit (link or self/text post). For images, upload first then use kind="link"
-- **`submit_comment`** - Submit a comment or reply to a post or comment
-- **`edit_post_or_comment`** - Edit the text content of a post or comment
-- **`delete_post_or_comment`** - Delete a post or comment
-
-### Search Tools
-- **`search_reddit`** - Search Reddit or specific subreddits
-
-### User Tools
-- **`get_user_info`** - Get user profile information and karma
-- **`get_user_posts`** - Get posts submitted by a user
-- **`get_user_comments`** - Get comments made by a user
-
-## 💡 Usage Examples
-
-### Basic Reddit Exploration
-```
-"What are the top posts in r/programming?"
-"Show me the latest posts from r/technology"
-"Get information about the r/learnprogramming subreddit"
-```
-
-### Post and Comment Analysis
-```
-"Get the comments for this post: [post_id] in r/programming"
-"Show me details about post [post_id]"
-"What are the top comments on this post?"
-```
-
-### User Research
-```
-"Get information about user [username]"
-"Show me posts by user [username]"
-"What comments has user [username] made recently?"
-```
-
-### Search Functionality
-```
-"Search Reddit for 'TypeScript tutorials'"
-"Search r/programming for 'React hooks'"
-"Find the top posts about 'machine learning' from this week"
-```
-
-### Posting and Interaction
-```
-"Submit a post to r/programming with title 'My New Project' and text 'Check out this cool thing I built'"
-"Upload an image from https://example.com/image.png and then post it to r/pics with title 'My Photo'"
-"Comment on post t3_xxxxx with text 'Great post! Thanks for sharing.'"
-"Edit my comment t1_xxxxx with new text 'Updated: Fixed typo'"
-"Delete my post t3_xxxxx"
-```
-
-### Image Posts
-To post images to Reddit with inline display:
-1. First, upload the image using `upload_image` with an image URL or local file path
-2. Then use the returned Reddit-hosted URL (i.redd.it) in `submit_post` with `kind: "link"`
-
-**Important:** Reddit's API does NOT support `kind="image"`. Use `kind="link"` with Reddit-hosted image URLs (i.redd.it) - they will display inline automatically.
-
-Example workflow:
-```
-1. "Upload image from https://example.com/screenshot.png"
-2. "Post the uploaded image to r/programming with title 'My Project Screenshot' and kind 'link'"
-```
-
-**Note:** Images are uploaded to Reddit's native servers (i.redd.it) and will display inline when used with `kind="link"`.
-
-## 🔧 Configuration
-
-### Environment Variables
-
-**All of the following environment variables are required:**
-
-- **`REDDIT_CLIENT_ID`** - Your Reddit app Client ID (required)
-- **`REDDIT_CLIENT_SECRET`** - Your Reddit app Client Secret (required)
-- **`REDDIT_USER_AGENT`** - User-Agent string (required, format: `app:client_id:version (by /u/username)`)
-- **`REDDIT_USERNAME`** - Your Reddit username (required)
-- **`REDDIT_PASSWORD`** - Your Reddit password (required)
-
-### User-Agent Format
-
-Reddit requires a specific User-Agent format:
-```
-<platform>:<app ID>:<version string> (by /u/<reddit username>)
-```
-
-Example:
-```
-mcp-reddit:1.0.0 (by /u/yourusername)
-```
-
-## 📋 Rate Limits
-
-Reddit API has rate limits:
-- **100 queries per minute (QPM)** per OAuth client ID
-- Rate limits are averaged over a 10-minute window to support bursting
-
-The server automatically handles rate limiting and token refresh.
-
-## 🧪 Testing
-
-### Running Tests
+## Installation
 
 ```bash
-# Run tests (when implemented)
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run tests with coverage
-npm run test:coverage
+npm install -g reddit-cli
 ```
 
-### Testing Locally
-
-You can test the Reddit API client directly using the test scripts (not committed to git):
+Or run without installing:
 
 ```bash
-# Test Reddit API Client
-REDDIT_CLIENT_ID="your_client_id" \
-REDDIT_CLIENT_SECRET="your_client_secret" \
-REDDIT_USER_AGENT="mcp-reddit:1.0.0 (by /u/yourusername)" \
-REDDIT_USERNAME="your_username" \
-REDDIT_PASSWORD="your_password" \
-npx ts-node scripts/test-reddit.ts
-
-# Test MCP Server Tools
-REDDIT_CLIENT_ID="your_client_id" \
-REDDIT_CLIENT_SECRET="your_client_secret" \
-REDDIT_USER_AGENT="mcp-reddit:1.0.0 (by /u/yourusername)" \
-REDDIT_USERNAME="your_username" \
-REDDIT_PASSWORD="your_password" \
-npx ts-node scripts/test-mcp-server.ts
+npx reddit-cli <command>
 ```
 
-**Note**: Test files (`scripts/test-reddit.ts`, `scripts/test-mcp-server.ts`) are in `.gitignore` and use environment variables for credentials.
+## Authentication
 
-## 🏗️ Development
+Create a Reddit app at <https://www.reddit.com/prefs/apps> (choose **script** type), then set the following environment variables (or add them to a `.env` file in your working directory):
 
-### Local Development Setup
+| Variable | Required | Purpose |
+|---|---|---|
+| `REDDIT_CLIENT_ID` | Yes | OAuth app Client ID |
+| `REDDIT_CLIENT_SECRET` | Yes | OAuth app Client Secret |
+| `REDDIT_USER_AGENT` | Yes | User-Agent string, e.g. `my-cli/1.0 by u/username` |
+| `REDDIT_USERNAME` | For write ops | Your Reddit username |
+| `REDDIT_PASSWORD` | For write ops | Your Reddit password |
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/nitaiaharoni1/mcp-reddit.git
-   cd mcp-reddit
-   ```
+Read-only commands (browsing, searching) only require the first three variables. Write operations (post, comment, vote, edit, delete, upload) additionally require `REDDIT_USERNAME` and `REDDIT_PASSWORD`.
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+## Commands
 
-3. **Set up environment variables:**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your Reddit credentials
-   ```
+All commands output JSON to stdout. Progress/status messages are printed to stderr so they can be silenced or piped independently.
 
-4. **Build the project:**
-   ```bash
-   npm run build
-   ```
-
-5. **Run in development mode:**
-   ```bash
-   npm run dev
-   ```
-
-### Development Scripts
-
-- `npm run build` - Build the project
-- `npm run dev` - Run in development mode
-- `npm run start` - Run production build
-- `npm run clean` - Clean build artifacts
-
-## 📦 Publishing
-
-### Prerequisites
-
-1. **NPM Account**: Make sure you have an NPM account and are logged in
-   ```bash
-   npm login
-   ```
-
-2. **Version Update**: Update the version in `package.json` if needed
-   ```bash
-   npm version patch  # or minor/major
-   ```
-
-### Publishing Steps
-
-1. **Pre-publish Check:**
-   ```bash
-   npm run publish:check
-   ```
-   This will clean, build, and show what files will be included.
-
-2. **Publish to NPM:**
-   ```bash
-   npm run publish:public
-   ```
-
-3. **Verify Publication:**
-   ```bash
-   npx mcp-reddit --version
-   ```
-
-### Benefits of NPX Approach
-
-- ✅ **No installation required** - Users can run immediately
-- ✅ **Always latest version** - NPX fetches the newest version
-- ✅ **No global pollution** - Doesn't install packages globally
-- ✅ **Cross-platform** - Works on Windows, macOS, Linux
-- ✅ **Easy updates** - Users automatically get updates
-
-## 🔒 Security
-
-### ⚠️ Important: Never Commit Credentials
-
-**Never commit your Reddit API credentials to git!**
-
-### Best Practices
-
-✅ **DO:**
-- Use environment variables for all secrets
-- Add `.env` files to `.gitignore`
-- Use `.env.example` with placeholder values
-- Never commit actual credentials
-- Test files are in `.gitignore` - they won't be committed
-
-❌ **DON'T:**
-- Hardcode secrets in source files
-- Commit test files with real credentials
-- Share credentials in documentation
-- Store secrets in version control
-
-### Environment Variables
-
-For Claude Desktop, set credentials in the config file (see Quick Setup above). For command-line usage or testing, you can set them as environment variables:
+### Subreddits
 
 ```bash
-export REDDIT_CLIENT_ID="your_client_id"
-export REDDIT_CLIENT_SECRET="your_client_secret"
-export REDDIT_USER_AGENT="mcp-reddit:1.0.0 (by /u/yourusername)"
-export REDDIT_USERNAME="your_username"
-export REDDIT_PASSWORD="your_password"
+# Get posts from a subreddit
+reddit-cli posts <subreddit> [--sort hot|new|top|rising|controversial] [--limit N] [--after <token>] [--time hour|day|week|month|year|all]
+
+# Get subreddit info
+reddit-cli subreddit <name>
+
+# Get subreddit rules
+reddit-cli rules <subreddit>
 ```
 
-**Important:** All five environment variables are required for the server to function properly.
+### Posts
 
-### Credential Rotation
+```bash
+# Get a specific post by ID
+reddit-cli post <post_id> --subreddit <sub>
 
-If you've accidentally committed credentials:
-1. Go to https://www.reddit.com/prefs/apps
-2. Delete the old app or regenerate the client secret
-3. Create a new app with new credentials
-4. Update your environment variables
+# Get comments for a post
+reddit-cli comments <post_id> --subreddit <sub> [--sort confidence|top|new|controversial|old|random|qa|live] [--limit N]
+```
 
-## 📄 License
+### Search
 
-**MIT License** - See the [LICENSE](LICENSE) file for complete terms and conditions.
+```bash
+# Search across all of Reddit
+reddit-cli search <query> [--sort relevance|hot|top|new|comments] [--time hour|day|week|month|year|all] [--limit N] [--after <token>]
 
-## 🙋‍♂️ Support
+# Search within a subreddit
+reddit-cli search <query> --subreddit <sub>
+```
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/nitaiaharoni1/mcp-reddit/issues)
-- **Documentation**: This README and inline code documentation
-- **Community**: Contributions and discussions welcome!
+### Users
 
-## ⚠️ Important Notes
+```bash
+reddit-cli user info <username>
+reddit-cli user posts <username>     [--sort hot|new|top|controversial] [--limit N] [--time ...]
+reddit-cli user comments <username>  [--sort hot|new|top|controversial] [--limit N] [--time ...]
+reddit-cli user overview <username>  [--sort hot|new|top|controversial] [--limit N] [--time ...]
+```
 
-- **Reddit API Terms**: Please review Reddit's [API Terms](https://www.reddit.com/wiki/api) and [Developer Terms](https://www.reddit.com/wiki/api/terms)
-- **Rate Limits**: Be mindful of Reddit's rate limits (100 QPM)
-- **User-Agent**: Always use a descriptive User-Agent string
-- **OAuth Required**: Reddit requires OAuth authentication for API access
+Use `me` as the username to target the currently authenticated user.
 
----
+### Front Page
 
-**Made with ❤️ for the AI and Reddit community**
+```bash
+reddit-cli front-page [--sort best|hot|new|top|rising|controversial] [--limit N] [--after <token>] [--time ...]
+```
+
+### Subreddit Discovery
+
+```bash
+reddit-cli subreddits popular  [--limit N] [--after <token>]
+reddit-cli subreddits new      [--limit N] [--after <token>]
+reddit-cli subreddits search <query> [--limit N] [--after <token>]
+```
+
+### Write Operations (require auth)
+
+```bash
+# Submit a text post
+reddit-cli submit post <subreddit> <title> --text "body text"
+
+# Submit a link post
+reddit-cli submit post <subreddit> <title> --url https://example.com
+
+# Additional flags for submit post
+#   --nsfw          Mark as NSFW
+#   --spoiler       Mark as spoiler
+#   --no-replies    Disable reply notifications
+#   --flair-id <id>
+#   --flair-text <text>
+
+# Comment on a post (t3_xxxxx) or reply to a comment (t1_xxxxx)
+reddit-cli submit comment <parent_id> "comment text"
+
+# Edit a post or comment
+reddit-cli edit <thing_id> "new text"
+
+# Delete a post or comment
+reddit-cli delete <thing_id>
+
+# Vote on a post or comment
+reddit-cli vote <thing_id> upvote|downvote|remove
+
+# Upload an image to Reddit (returns i.redd.it URL)
+reddit-cli upload-image --url https://example.com/image.png
+reddit-cli upload-image --path /path/to/image.png
+```
+
+## Examples
+
+```bash
+# Browse top posts from r/programming this week
+reddit-cli posts programming --sort top --time week --limit 10
+
+# Search for TypeScript posts with 50 results
+reddit-cli search TypeScript --sort relevance --limit 50
+
+# Get comments for a post
+reddit-cli comments abc123 --subreddit programming --sort top
+
+# Submit a text post
+reddit-cli submit post AskReddit "What is your favourite CLI tool?" --text "Mine is jq."
+
+# Upvote a post
+reddit-cli vote t3_abc123 upvote
+
+# Pipe output through jq
+reddit-cli posts javascript --limit 5 | jq '.[0:5] | .posts[].title'
+```
+
+## Output
+
+All commands output pretty-printed JSON. Use [jq](https://stedolan.github.io/jq/) to filter, transform, or extract fields:
+
+```bash
+# List post titles and scores
+reddit-cli posts programming | jq '.posts[] | {title, score}'
+
+# Get subscriber count for a subreddit
+reddit-cli subreddit rust | jq '.subscribers'
+```
+
+## License
+
+MIT

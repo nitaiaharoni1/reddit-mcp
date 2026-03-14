@@ -13,7 +13,7 @@ import { postingTools } from './posting';
 import { MCPToolDefinition, MCPResult } from '../types/mcp';
 
 // Combine all tools
-const allTools: MCPToolDefinition[] = [
+export const allTools: MCPToolDefinition[] = [
   ...subredditTools,
   ...postTools,
   ...searchTools,

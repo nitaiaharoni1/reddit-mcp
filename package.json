@@ -1,11 +1,11 @@
 {
-  "name": "mcp-reddit",
-  "version": "1.1.8",
-  "description": "A Model Context Protocol (MCP) server for Reddit API integration. Provides AI assistants with access to Reddit data including subreddits, posts, comments, users, and search functionality.",
-  "main": "dist/server.js",
-  "types": "dist/server.d.ts",
+  "name": "reddit-cli",
+  "version": "1.0.0",
+  "description": "A command-line interface for the Reddit API. Browse subreddits, posts, comments, users, search, and perform write operations directly from your terminal.",
+  "main": "dist/cli.js",
+  "types": "dist/cli.d.ts",
   "bin": {
-    "mcp-reddit": "dist/server.js"
+    "reddit-cli": "dist/cli.js"
   },
   "publishConfig": {
     "access": "public",
@@ -16,14 +16,12 @@
     "build:dev": "tsc",
     "build:types": "tsc --emitDeclarationOnly",
     "build:compare": "node build.js --compare",
-    "start": "node dist/server.js",
-    "dev": "ts-node server.ts",
-    "dev:watch": "nodemon --exec ts-node server.ts",
+    "start": "node dist/cli.js",
+    "dev": "ts-node cli.ts",
+    "dev:watch": "nodemon --exec ts-node cli.ts",
     "test": "echo 'No tests configured yet'",
     "test:watch": "echo 'No tests configured yet'",
     "test:coverage": "echo 'No tests configured yet'",
-    "configure": "npm run build && node dist/server.js --configure",
-    "find-config": "npm run build && node dist/server.js --find-config",
     "clean": "rimraf dist coverage",
     "prepare": "husky",
     "prepublishOnly": "npm run clean && npm run build && npm run build:types",
@@ -31,27 +29,22 @@
     "release:patch": "npm run build && node dist/release.js patch --yes",
     "release:minor": "npm run build && node dist/release.js minor --yes",
     "release:major": "npm run build && node dist/release.js major --yes",
-    "release:dry": "npm run build && node dist/release.js --dry-run",
     "version:check": "echo \"Current version: $(node -p 'require(\"./package.json\").version')\"",
     "publish:check": "npm run prepublishOnly && npm pack --dry-run",
     "publish:public": "npm publish --access public"
   },
   "keywords": [
-    "mcp",
-    "model-context-protocol",
-    "npx",
     "reddit",
     "reddit-api",
     "reddit-client",
+    "cli",
+    "command-line",
     "subreddit",
     "posts",
     "comments",
-    "claude",
-    "ai",
     "social-media",
     "api-integration",
     "oauth",
-    "cli",
     "open-source",
     "typescript"
   ],
@@ -59,12 +52,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nitaiaharoni1/reddit-mcp.git"
+    "url": "git+https://github.com/nitaiaharoni1/reddit-cli.git"
   },
   "bugs": {
-    "url": "https://github.com/nitaiaharoni1/reddit-mcp/issues"
+    "url": "https://github.com/nitaiaharoni1/reddit-cli/issues"
   },
-  "homepage": "https://github.com/nitaiaharoni1/reddit-mcp#readme",
+  "homepage": "https://github.com/nitaiaharoni1/reddit-cli#readme",
   "files": [
     "dist/",
     ".env.example",
@@ -73,8 +66,8 @@
   ],
   "preferGlobal": true,
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.13.0",
     "axios": "^1.7.9",
+    "commander": "^12.0.0",
     "dotenv": "^16.5.0",
     "form-data": "^4.0.5"
   },

@@ -1,8 +1,8 @@
 /**
- * MCP (Model Context Protocol) Type Definitions
+ * Type Definitions for Reddit CLI tools
  */
 
-// MCP Tool Result Content
+// Tool Result Content
 export interface MCPTextContent {
   type: 'text';
   text: string;
@@ -16,13 +16,13 @@ export interface MCPImageContent {
 
 export type MCPContent = MCPTextContent | MCPImageContent;
 
-// MCP Tool Result
+// Tool Result
 export interface MCPResult {
   content: MCPContent[];
   isError?: boolean;
 }
 
-// MCP Tool Input Schema Property
+// Tool Input Schema Property
 export interface MCPInputProperty {
   type: string;
   description: string;
@@ -33,14 +33,14 @@ export interface MCPInputProperty {
   required?: string[];
 }
 
-// MCP Tool Input Schema
+// Tool Input Schema
 export interface MCPInputSchema {
   type: 'object';
   properties: { [key: string]: MCPInputProperty };
   required?: string[];
 }
 
-// MCP Tool Definition
+// Tool Definition
 export interface MCPToolDefinition {
   name: string;
   description: string;
@@ -48,7 +48,7 @@ export interface MCPToolDefinition {
   handler: (args: any) => Promise<MCPResult>;
 }
 
-// MCP Tool Arguments (generic)
+// Tool Arguments (generic)
 export interface MCPToolArgs {
   [key: string]: any;
 }
@@ -81,17 +81,3 @@ export interface SearchRedditArgs extends MCPToolArgs {
 export interface GetUserInfoArgs extends MCPToolArgs {
   username: string;
 }
-
-// MCP Server Configuration
-export interface MCPServerConfig {
-  name: string;
-  version: string;
-}
-
-// MCP Error Response
-export interface MCPError {
-  code: number;
-  message: string;
-  data?: any;
-}
-

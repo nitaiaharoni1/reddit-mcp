@@ -2,8 +2,6 @@
  * Application Constants
  */
 
-import { MCPServerConfig } from '../types/mcp';
-
 // Reddit API limits
 export const REDDIT_LIMITS = {
   MAX_POSTS_PER_REQUEST: 100,
@@ -24,9 +22,9 @@ export const REDDIT_RATE_LIMIT = {
   MAX_COMPUTED_DELAY_MS: 30_000,
 } as const;
 
-// Server configuration
-export const SERVER_CONFIG: MCPServerConfig = {
-  name: 'reddit-mcp',
+// CLI configuration
+export const SERVER_CONFIG = {
+  name: 'reddit-cli',
   version: '1.0.0',
 } as const;
 
